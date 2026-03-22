@@ -1,0 +1,1083 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "hvNbE",
+      "x": 0,
+      "y": 0,
+      "name": "Adventure Board",
+      "width": 1200,
+      "height": 800,
+      "fill": "$--background",
+      "children": [
+        {
+          "type": "frame",
+          "id": "jdf7I",
+          "name": "Game Board",
+          "width": 900,
+          "height": "fill_container",
+          "layout": "none",
+          "children": [
+            {
+              "id": "zb8Ab",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 100,
+              "y": 650,
+              "name": "t1",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "1"
+                }
+              }
+            },
+            {
+              "id": "o1ONd",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 220,
+              "y": 650,
+              "name": "t2",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "2"
+                }
+              }
+            },
+            {
+              "id": "emlmp",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 340,
+              "y": 650,
+              "name": "t3",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "3"
+                }
+              }
+            },
+            {
+              "id": "CQ98W",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 460,
+              "y": 650,
+              "name": "t4",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "4"
+                }
+              }
+            },
+            {
+              "id": "s73vG",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 580,
+              "y": 650,
+              "name": "t5",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "5"
+                }
+              }
+            },
+            {
+              "id": "0niR5",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 700,
+              "y": 650,
+              "fill": "#EF4444",
+              "stroke": {
+                "align": "inside",
+                "thickness": 4,
+                "fill": "#B91C1C"
+              },
+              "name": "t6",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "6",
+                  "fill": "#FFFFFF"
+                }
+              }
+            },
+            {
+              "id": "eJP4H",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 700,
+              "y": 530,
+              "name": "t7",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "7"
+                }
+              }
+            },
+            {
+              "id": "GWpt0",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 580,
+              "y": 530,
+              "fill": "#10B981",
+              "stroke": {
+                "align": "inside",
+                "thickness": 4,
+                "fill": "#047857"
+              },
+              "name": "t8",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "8",
+                  "fill": "#FFFFFF"
+                }
+              }
+            },
+            {
+              "id": "gOObe",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 460,
+              "y": 530,
+              "name": "t9",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "9"
+                }
+              }
+            },
+            {
+              "id": "gktF4",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 340,
+              "y": 530,
+              "name": "t10",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "10"
+                }
+              }
+            },
+            {
+              "id": "tY4N5",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 220,
+              "y": 530,
+              "name": "t11",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "11"
+                }
+              }
+            },
+            {
+              "id": "DKiRu",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 100,
+              "y": 530,
+              "name": "t12",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "12"
+                }
+              }
+            },
+            {
+              "id": "pu7yV",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 100,
+              "y": 410,
+              "fill": "#10B981",
+              "stroke": {
+                "align": "inside",
+                "thickness": 4,
+                "fill": "#047857"
+              },
+              "name": "t13",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "13",
+                  "fill": "#FFFFFF"
+                }
+              }
+            },
+            {
+              "id": "rRaYn",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 220,
+              "y": 410,
+              "name": "t14",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "14"
+                }
+              }
+            },
+            {
+              "id": "J7Xht",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 340,
+              "y": 410,
+              "fill": "#EF4444",
+              "stroke": {
+                "align": "inside",
+                "thickness": 4,
+                "fill": "#B91C1C"
+              },
+              "name": "t15",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "15",
+                  "fill": "#FFFFFF"
+                }
+              }
+            },
+            {
+              "id": "eJZPm",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 460,
+              "y": 410,
+              "name": "t16",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "16"
+                }
+              }
+            },
+            {
+              "id": "42phj",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 580,
+              "y": 410,
+              "name": "t17",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "17"
+                }
+              }
+            },
+            {
+              "id": "ZDAyg",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 700,
+              "y": 410,
+              "name": "t18",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "18"
+                }
+              }
+            },
+            {
+              "id": "4afkv",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 700,
+              "y": 290,
+              "name": "t19",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "19"
+                }
+              }
+            },
+            {
+              "id": "qEoBG",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 580,
+              "y": 290,
+              "fill": "#EF4444",
+              "stroke": {
+                "align": "inside",
+                "thickness": 4,
+                "fill": "#B91C1C"
+              },
+              "name": "t20",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "20",
+                  "fill": "#FFFFFF"
+                }
+              }
+            },
+            {
+              "id": "4Bib5",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 460,
+              "y": 290,
+              "name": "t21",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "21"
+                }
+              }
+            },
+            {
+              "id": "9BzI0",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 340,
+              "y": 290,
+              "fill": "#10B981",
+              "stroke": {
+                "align": "inside",
+                "thickness": 4,
+                "fill": "#047857"
+              },
+              "name": "t22",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "22",
+                  "fill": "#FFFFFF"
+                }
+              }
+            },
+            {
+              "id": "UI0AR",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 220,
+              "y": 290,
+              "name": "t23",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "23"
+                }
+              }
+            },
+            {
+              "id": "7Fi6n",
+              "type": "ref",
+              "ref": "lduZl",
+              "x": 100,
+              "y": 290,
+              "name": "t24",
+              "descendants": {
+                "v5Kvf": {
+                  "content": "24",
+                  "fill": "#1E3A8A",
+                  "fontSize": 32
+                }
+              }
+            },
+            {
+              "type": "frame",
+              "id": "BxzvC",
+              "x": 100,
+              "y": 720,
+              "name": "shipFrame",
+              "clip": true,
+              "width": 120,
+              "height": 120,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188830299.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 60,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "Nq0Jd",
+              "x": 80,
+              "y": 100,
+              "name": "treasureFrame",
+              "clip": true,
+              "width": 160,
+              "height": 160,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188852394.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 30,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "prqrB",
+              "x": 350,
+              "y": 380,
+              "name": "islandFrame",
+              "clip": true,
+              "width": 240,
+              "height": 240,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188876187.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 120,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "uyLXZ",
+              "x": 100,
+              "y": 720,
+              "name": "shipFrame",
+              "clip": true,
+              "width": 120,
+              "height": 120,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188882580.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 60,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "pINHI",
+              "x": 700,
+              "y": 600,
+              "name": "octopusFrame",
+              "clip": true,
+              "width": 120,
+              "height": 120,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188896655.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 60,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "vUkIG",
+              "x": 80,
+              "y": 100,
+              "name": "treasureFrame",
+              "clip": true,
+              "width": 160,
+              "height": 160,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188905282.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 30,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "GltlH",
+              "x": 350,
+              "y": 380,
+              "name": "islandFrame",
+              "clip": true,
+              "width": 240,
+              "height": 240,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188933050.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 120,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "dZs23",
+              "x": 350,
+              "y": 380,
+              "name": "islandFrame",
+              "clip": true,
+              "width": 240,
+              "height": 240,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188945270.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 120,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "djNkl",
+              "x": 700,
+              "y": 600,
+              "name": "octopusFrame",
+              "clip": true,
+              "width": 120,
+              "height": 120,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188960673.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 60,
+              "layout": "none"
+            },
+            {
+              "type": "frame",
+              "id": "sS8MG",
+              "x": 700,
+              "y": 600,
+              "name": "octopusFrame",
+              "clip": true,
+              "width": 120,
+              "height": 120,
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "./images/generated-1774188952202.png",
+                "mode": "fill"
+              },
+              "cornerRadius": 60,
+              "layout": "none"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LCdKv",
+          "name": "Sidebar",
+          "width": 300,
+          "height": "fill_container",
+          "fill": "$--card",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "left": 2
+            },
+            "fill": "$--border"
+          },
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "EmIY9",
+              "name": "titleBox",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "y7B5u",
+                  "name": "header",
+                  "fill": "$--foreground",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Treasure Island",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 32,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "ZT7fa",
+                  "name": "sub",
+                  "fill": "$--primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Adventure Game",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "iRVdX",
+              "name": "playerBox",
+              "width": "fill_container",
+              "fill": "#F0FDF4",
+              "cornerRadius": 16,
+              "stroke": {
+                "align": "inside",
+                "thickness": 2,
+                "fill": "#4ADE80"
+              },
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Z3BgV",
+                  "name": "pTitle",
+                  "fill": "#166534",
+                  "content": "Current Turn",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "ewZ5C",
+                  "name": "pAvatarArea",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NtN8d",
+                      "name": "pAvatar",
+                      "clip": true,
+                      "width": 48,
+                      "height": 48,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "./images/generated-1774188912898.png",
+                        "mode": "fill"
+                      },
+                      "cornerRadius": 24
+                    },
+                    {
+                      "type": "text",
+                      "id": "7MNc7",
+                      "name": "pName",
+                      "fill": "#15803D",
+                      "content": "Player 1",
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IlYqw",
+              "name": "diceBox",
+              "width": "fill_container",
+              "fill": "#FEF2F2",
+              "cornerRadius": 16,
+              "stroke": {
+                "align": "inside",
+                "thickness": 2,
+                "fill": "#F87171"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oS4iE",
+                  "name": "dTitle",
+                  "fill": "#991B1B",
+                  "content": "Your Action",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "EWno0",
+                  "name": "diceImg",
+                  "clip": true,
+                  "width": 80,
+                  "height": 80,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1774188933446.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 16
+                },
+                {
+                  "type": "frame",
+                  "id": "ecAZ2",
+                  "name": "btn",
+                  "fill": "#EF4444",
+                  "cornerRadius": 24,
+                  "padding": [
+                    12,
+                    32
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "rMIW6",
+                      "name": "btnTxt",
+                      "fill": "#FFFFFF",
+                      "content": "ROLL DICE",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TYnrW",
+              "name": "playerBox",
+              "width": "fill_container",
+              "fill": "#F0FDF4",
+              "cornerRadius": 16,
+              "stroke": {
+                "align": "inside",
+                "thickness": 2,
+                "fill": "#4ADE80"
+              },
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xFQAt",
+                  "name": "pTitle",
+                  "fill": "#166534",
+                  "content": "Current Turn",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "LpvK7",
+                  "name": "pAvatarArea",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "dx51D",
+                      "name": "pAvatarFrame",
+                      "clip": true,
+                      "width": 48,
+                      "height": 48,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "./images/generated-1774188984546.png",
+                        "mode": "fill"
+                      },
+                      "cornerRadius": 24
+                    },
+                    {
+                      "type": "text",
+                      "id": "myVA9",
+                      "name": "pName",
+                      "fill": "#15803D",
+                      "content": "Player 1",
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uAuKx",
+              "name": "diceBox",
+              "width": "fill_container",
+              "fill": "#FEF2F2",
+              "cornerRadius": 16,
+              "stroke": {
+                "align": "inside",
+                "thickness": 2,
+                "fill": "#F87171"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pAsun",
+                  "name": "dTitle",
+                  "fill": "#991B1B",
+                  "content": "Your Action",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "TVVjt",
+                  "name": "diceFrame",
+                  "clip": true,
+                  "width": 80,
+                  "height": 80,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1774189005530.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 16
+                },
+                {
+                  "type": "frame",
+                  "id": "Gee2z",
+                  "name": "btn",
+                  "fill": "#EF4444",
+                  "cornerRadius": 24,
+                  "padding": [
+                    12,
+                    32
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Eo9hF",
+                      "name": "btnTxt",
+                      "fill": "#FFFFFF",
+                      "content": "ROLL DICE",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "q7ZdP",
+              "name": "playerBox",
+              "width": "fill_container",
+              "fill": "#F0FDF4",
+              "cornerRadius": 16,
+              "stroke": {
+                "align": "inside",
+                "thickness": 2,
+                "fill": "#4ADE80"
+              },
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "0LmWc",
+                  "name": "pTitle",
+                  "fill": "#166534",
+                  "content": "Current Turn",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "FDTFn",
+                  "name": "pAvatarArea",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XLcFn",
+                      "name": "pAvatar",
+                      "clip": true,
+                      "width": 48,
+                      "height": 48,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "./images/generated-1774188978950.png",
+                        "mode": "fill"
+                      },
+                      "cornerRadius": 24
+                    },
+                    {
+                      "type": "text",
+                      "id": "JTENd",
+                      "name": "pName",
+                      "fill": "#15803D",
+                      "content": "Player 1",
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zcGPO",
+              "name": "diceBox",
+              "width": "fill_container",
+              "fill": "#FEF2F2",
+              "cornerRadius": 16,
+              "stroke": {
+                "align": "inside",
+                "thickness": 2,
+                "fill": "#F87171"
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IfSQs",
+                  "name": "dTitle",
+                  "fill": "#991B1B",
+                  "content": "Your Action",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "G4Vjk",
+                  "name": "diceImg",
+                  "clip": true,
+                  "width": 80,
+                  "height": 80,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1774189005193.png",
+                    "mode": "fill"
+                  },
+                  "cornerRadius": 16
+                },
+                {
+                  "type": "frame",
+                  "id": "xlJTm",
+                  "name": "btn",
+                  "fill": "#EF4444",
+                  "cornerRadius": 24,
+                  "padding": [
+                    12,
+                    32
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "kGA93",
+                      "name": "btnTxt",
+                      "fill": "#FFFFFF",
+                      "content": "ROLL DICE",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "lduZl",
+      "x": 0,
+      "y": 0,
+      "name": "Tile",
+      "reusable": true,
+      "width": 80,
+      "height": 80,
+      "fill": "#FEF3C7",
+      "cornerRadius": 40,
+      "stroke": {
+        "align": "inside",
+        "thickness": 4,
+        "fill": "#F59E0B"
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "text",
+          "id": "v5Kvf",
+          "x": 0,
+          "y": 0,
+          "name": "label",
+          "fill": "#1E3A8A",
+          "textGrowth": "fixed-width-height",
+          "width": 80,
+          "height": 80,
+          "content": "1",
+          "textAlign": "center",
+          "textAlignVertical": "middle",
+          "fontFamily": "Inter",
+          "fontSize": 32,
+          "fontWeight": "800"
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "--background": {
+      "type": "color",
+      "value": "#E0F2FE"
+    },
+    "--border": {
+      "type": "color",
+      "value": "#BAE6FD"
+    },
+    "--card": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "--danger": {
+      "type": "color",
+      "value": "#EF4444"
+    },
+    "--font-primary": {
+      "type": "string",
+      "value": "Bricolage Grotesque"
+    },
+    "--font-secondary": {
+      "type": "string",
+      "value": "DM Sans"
+    },
+    "--foreground": {
+      "type": "color",
+      "value": "#1E3A8A"
+    },
+    "--primary": {
+      "type": "color",
+      "value": "#F59E0B"
+    },
+    "--secondary": {
+      "type": "color",
+      "value": "#38BDF8"
+    },
+    "--success": {
+      "type": "color",
+      "value": "#10B981"
+    }
+  }
+}

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏴‍☠️ 海盗冒险棋</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a1628;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #header {
+      text-align: center;
+      padding: 8px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      background: rgba(0,0,0,0.3);
+      letter-spacing: 2px;
+    }
+    #game-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    #canvas-wrapper {
+      flex: 1 1 70%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+    canvas {
+      border: 3px solid #4a9eff;
+      border-radius: 12px;
+      background: #1a3a5c;
+    }
+    #sidebar {
+      flex: 0 0 280px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 10px;
+      background: rgba(0,0,0,0.2);
+      border-left: 1px solid #1e3a5a;
+      overflow-y: auto;
+    }
+    #footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      background: rgba(0,0,0,0.3);
+      font-size: 0.85rem;
+    }
+    /* Screen overlays */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 22, 40, 0.97);
+      z-index: 100;
+    }
+    .screen.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="header">🏴‍☠️ 海盗冒险棋</div>
+  <div id="game-area">
+    <div id="canvas-wrapper">
+      <canvas id="board-canvas"></canvas>
+    </div>
+    <div id="sidebar">
+      <div id="players-panel"></div>
+      <div id="dice-panel"></div>
+      <div id="log-panel"></div>
+    </div>
+  </div>
+  <div id="footer">
+    <div>
+      <button id="btn-sound">🔊 音效</button>
+      <button id="btn-rules">❓ 规则</button>
+    </div>
+    <div id="turn-info">回合 #1</div>
+  </div>
+
+  <!-- Start Screen -->
+  <div id="start-screen" class="screen">
+    <div style="text-align:center; max-width:400px;">
+      <h1 style="font-size:2.5rem; margin-bottom:1rem;">🏴‍☠️ 海盗冒险棋</h1>
+      <p style="color:#aaa; margin-bottom:2rem;">第一个到达宝箱(100格)的玩家获胜！</p>
+      <button id="btn-start" style="padding:12px 40px; font-size:1.2rem; cursor:pointer;">
+        ⚓ 开始冒险
+      </button>
+    </div>
+  </div>
+
+  <!-- Win Screen -->
+  <div id="win-screen" class="screen hidden">
+    <div style="text-align:center;">
+      <div style="font-size:4rem;">🏆</div>
+      <h2 id="win-message" style="font-size:2rem; margin: 1rem 0;"></h2>
+      <button id="btn-replay" style="padding:10px 30px; font-size:1.1rem; cursor:pointer;">
+        🔄 再来一局
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // TODO: game code goes here
+    console.log('海盗冒险棋 initialized');
+  </script>
+</body>
+</html>
