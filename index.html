@@ -469,22 +469,163 @@
       while (log.children.length > 30) log.lastChild.remove();
     }
 
-    // ── STUB ── (will be replaced in Task 6)
-    let board;
+    // ── HELPERS ────────────────────────────────────────────────────────────────
+    function sleep(ms) {
+      return new Promise(r => setTimeout(r, ms));
+    }
+
+    // Move player step-by-step with animation delay
+    function animateMove(player, targetPos, players, delay = 180) {
+      return new Promise(resolve => {
+        const step = player.position < targetPos ? 1 : -1;
+        const move = () => {
+          player.position += step;
+          if (player.position < 1) player.position = 1;
+          if (player.position > 100) player.position = 100;
+          board.drawBoard(players);
+          if (player.position === targetPos) {
+            resolve();
+          } else {
+            setTimeout(move, delay);
+          }
+        };
+        setTimeout(move, delay);
+      });
+    }
+
+    // ── EVENT SYSTEM (stub — will be replaced in Task 7) ──────────────────────
+    class EventSystem {
+      async trigger(eventId, player, engine) {
+        const ev = EVENT_TYPES[eventId];
+        const logType = ev.type === 'positive' ? 'positive' :
+                        ev.type === 'negative' ? 'negative' : 'interactive';
+        addLog(`${player.emoji} 踩到 ${ev.emoji} ${ev.name}！`, logType);
+        await sleep(800);
+      }
+    }
+
+    // ── GAME ENGINE ────────────────────────────────────────────────────────────
+    class GameEngine {
+      constructor(players) {
+        this.players = players;
+        this.currentIndex = 0;
+        this.turnNumber = 1;
+        this.dice = new Dice(document.getElementById('dice-display'));
+        this.gameOver = false;
+      }
+
+      get currentPlayer() {
+        return this.players[this.currentIndex];
+      }
+
+      nextPlayer() {
+        this.currentIndex = (this.currentIndex + 1) % this.players.length;
+        if (this.currentIndex === 0) this.turnNumber++;
+        document.getElementById('turn-info').textContent = `回合 #${this.turnNumber}`;
+      }
+
+      async doTurn() {
+        const player = this.currentPlayer;
+        const rollBtn = document.getElementById('btn-roll');
+        rollBtn.disabled = true;
+
+        // Skip turn if anchored (ISLAND event)
+        if (player.skipTurns > 0) {
+          player.skipTurns--;
+          addLog(`${player.name} 在小岛休息，跳过本回合。`, 'negative');
+          renderPlayersPanel(this.players, this.currentIndex);
+          await sleep(800);
+          this.nextPlayer();
+          renderPlayersPanel(this.players, this.currentIndex);
+          this.enableRollForCurrentPlayer();
+          return;
+        }
+
+        // Roll dice
+        const roll = await this.dice.roll();
+        if (roll === null) return; // concurrent call guard
+        let moveBy = roll + (player.turtleBuff > 0 ? 1 : 0);
+        if (player.turtleBuff > 0) player.turtleBuff--;
+        addLog(`${player.emoji} ${player.name} 掷出 ${roll}${moveBy > roll ? '(+1🐢)' : ''} 点`);
+
+        // Move
+        const newPos = Math.min(player.position + moveBy, 100);
+        await animateMove(player, newPos, this.players);
+
+        // Check win
+        if (player.position >= 100) {
+          this.showWin(player);
+          return;
+        }
+
+        // Trigger cell event
+        const cell = board.getCell(player.position);
+        if (cell && cell.event) {
+          await eventSystem.trigger(cell.event.id, player, this);
+        }
+
+        // Check win again (events may have moved player to 100)
+        if (player.position >= 100) {
+          this.showWin(player);
+          return;
+        }
+
+        renderPlayersPanel(this.players, this.currentIndex);
+        this.nextPlayer();
+        renderPlayersPanel(this.players, this.currentIndex);
+        this.enableRollForCurrentPlayer();
+      }
+
+      enableRollForCurrentPlayer() {
+        if (this.gameOver) return;
+        const rollBtn = document.getElementById('btn-roll');
+        if (this.currentPlayer.isAI) {
+          setTimeout(() => this.doTurn(), 900);
+        } else {
+          rollBtn.disabled = false;
+        }
+      }
+
+      showWin(player) {
+        this.gameOver = true;
+        document.getElementById('btn-roll').disabled = true;
+        document.getElementById('win-message').textContent =
+          `${player.emoji} ${player.name} 到达宝箱，赢了！🎉`;
+        document.getElementById('win-screen').classList.remove('hidden');
+      }
+    }
+
+    // ── GAME INIT ──────────────────────────────────────────────────────────────
+    let board, eventSystem, engine;
 
     function startGame(playerConfigs) {
+      let configs = playerConfigs;
+      // Ensure at least 2 participants (add AI if only 1 human)
+      if (configs.length === 1 && !configs[0].isAI) {
+        configs = [...configs, { name: 'AI海盗', isAI: true }];
+      }
+
       board = new Board(document.getElementById('board-canvas'));
       board.cells.forEach(cell => {
         const evId = CELL_EVENTS[cell.index];
         if (evId) cell.event = EVENT_TYPES[evId];
       });
-      const players = playerConfigs.map((cfg, i) =>
+
+      const players = configs.map((cfg, i) =>
         new Player(i, cfg.name, PLAYER_COLORS[i], cfg.isAI)
       );
       players.forEach(p => { p.position = 1; });
+
+      eventSystem = new EventSystem();
+      engine = new GameEngine(players);
+
       board.drawBoard(players);
       renderPlayersPanel(players, 0);
       addLog('🏴‍☠️ 游戏开始！第一个到达100格获胜！');
+
+      const rollBtn = document.getElementById('btn-roll');
+      rollBtn.onclick = () => engine.doTurn();
+      engine.enableRollForCurrentPlayer();
     }
 
     document.getElementById('btn-start').addEventListener('click', () => {
@@ -493,6 +634,12 @@
         { name: '你', isAI: false },
         { name: 'AI海盗', isAI: true },
       ]);
+    });
+
+    document.getElementById('btn-replay').addEventListener('click', () => {
+      document.getElementById('win-screen').classList.add('hidden');
+      document.getElementById('log-panel').innerHTML = '';
+      document.getElementById('start-screen').classList.remove('hidden');
     });
   </script>
 </body>
