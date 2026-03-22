@@ -122,6 +122,34 @@
 .log-entry.positive { color: #6f6; }
 .log-entry.negative { color: #f66; }
 .log-entry.interactive { color: #69f; }
+    #event-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+#event-modal.show { display: flex; }
+.event-card {
+  background: #1a2a3a;
+  border: 2px solid #4a9eff;
+  border-radius: 16px;
+  padding: 24px 32px;
+  text-align: center;
+  max-width: 340px;
+  animation: pop 0.3s ease;
+}
+@keyframes pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.event-emoji { font-size: 3rem; margin-bottom: 8px; }
+.event-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 8px; }
+.event-desc { color: #aad; margin-bottom: 16px; }
+.event-btn { padding: 8px 20px; margin: 4px; border: none; border-radius: 8px;
+             cursor: pointer; font-size: 1rem; }
     /* Screen overlays */
     .screen {
       position: fixed;
@@ -186,6 +214,15 @@
       </button>
     </div>
   </div>
+
+  <div id="event-modal">
+  <div class="event-card">
+    <div class="event-emoji" id="modal-emoji"></div>
+    <div class="event-name" id="modal-name"></div>
+    <div class="event-desc" id="modal-desc"></div>
+    <div id="modal-buttons"></div>
+  </div>
+</div>
 
   <script>
     // ── CONSTANTS ──────────────────────────────────────────────────────────────
@@ -494,14 +531,215 @@
       });
     }
 
-    // ── EVENT SYSTEM (stub — will be replaced in Task 7) ──────────────────────
+    function showEventModal(emoji, name, desc, buttons = []) {
+      return new Promise(resolve => {
+        document.getElementById('modal-emoji').textContent = emoji;
+        document.getElementById('modal-name').textContent = name;
+        document.getElementById('modal-desc').textContent = desc;
+        const btns = document.getElementById('modal-buttons');
+        btns.innerHTML = '';
+        if (buttons.length === 0) {
+          document.getElementById('event-modal').classList.add('show');
+          setTimeout(() => {
+            document.getElementById('event-modal').classList.remove('show');
+            resolve(null);
+          }, 2000);
+        } else {
+          buttons.forEach(b => {
+            const btn = document.createElement('button');
+            btn.className = 'event-btn';
+            btn.style.background = b.color || '#4a9eff';
+            btn.style.color = '#fff';
+            btn.textContent = b.label;
+            btn.onclick = () => {
+              document.getElementById('event-modal').classList.remove('show');
+              resolve(b.value);
+            };
+            btns.appendChild(btn);
+          });
+          document.getElementById('event-modal').classList.add('show');
+        }
+      });
+    }
+
+    // ── EVENT SYSTEM ────────────────────────────────────────────────────────────
     class EventSystem {
       async trigger(eventId, player, engine) {
         const ev = EVENT_TYPES[eventId];
         const logType = ev.type === 'positive' ? 'positive' :
                         ev.type === 'negative' ? 'negative' : 'interactive';
-        addLog(`${player.emoji} 踩到 ${ev.emoji} ${ev.name}！`, logType);
-        await sleep(800);
+
+        switch (eventId) {
+          case 'PARROT': {
+            const target = PARROT_JUMPS[player.position];
+            addLog(`${player.emoji} ${ev.emoji} 鹦鹉送信！飞到第${target}格！`, 'positive');
+            await showEventModal(ev.emoji, ev.name, `鹦鹉带你飞到第${target}格！`);
+            await animateMove(player, target, engine.players, 120);
+            break;
+          }
+          case 'TREASURE_MAP': {
+            addLog(`${player.emoji} ${ev.emoji} 发现藏宝图！额外掷一次骰子！`, 'positive');
+            await showEventModal(ev.emoji, ev.name, '发现藏宝图，再掷一次骰子！');
+            const bonus = await engine.dice.roll();
+            if (bonus !== null) {
+              addLog(`${player.emoji} 额外掷出 ${bonus} 点！`);
+              const newPos = Math.min(player.position + bonus, 100);
+              await animateMove(player, newPos, engine.players);
+            }
+            break;
+          }
+          case 'DOLPHIN': {
+            addLog(`${player.emoji} ${ev.emoji} 海豚助力！前进3格！`, 'positive');
+            await showEventModal(ev.emoji, ev.name, '海豚驮你飞驰！前进3格！');
+            await animateMove(player, Math.min(player.position + 3, 100), engine.players);
+            break;
+          }
+          case 'RAINBOW': {
+            const dest = RAINBOW_PAIRS[player.position];
+            addLog(`${player.emoji} ${ev.emoji} 彩虹桥！传送到第${dest}格！`, 'positive');
+            await showEventModal(ev.emoji, ev.name, `彩虹搭起桥梁，传送到第${dest}格！`);
+            await animateMove(player, dest, engine.players, 120);
+            break;
+          }
+          case 'WISH_STAR': {
+            if (player.isAI) {
+              addLog(`${player.emoji} ${ev.emoji} 许愿星！AI选择前进3格！`, 'positive');
+              await animateMove(player, Math.min(player.position + 3, 100), engine.players);
+            } else {
+              const choice = await showEventModal(ev.emoji, ev.name, '流星来了，许个愿！选择前进几格：', [
+                { label: '+1格', value: 1, color: '#448844' },
+                { label: '+2格', value: 2, color: '#2266aa' },
+                { label: '+3格', value: 3, color: '#884400' },
+              ]);
+              addLog(`${player.emoji} ${ev.emoji} 许愿星！选择前进${choice}格！`, 'positive');
+              await animateMove(player, Math.min(player.position + choice, 100), engine.players);
+            }
+            break;
+          }
+          case 'TURTLE': {
+            player.turtleBuff = 2;
+            addLog(`${player.emoji} ${ev.emoji} 海龟顺风车！接下来2回合各+1格！`, 'positive');
+            await showEventModal(ev.emoji, ev.name, '大海龟让你搭顺风车！接下来2回合各多走1格！');
+            break;
+          }
+          case 'OCTOPUS': {
+            const target = OCTOPUS_DROPS[player.position];
+            addLog(`${player.emoji} ${ev.emoji} 大章鱼！被拉回第${target}格！`, 'negative');
+            await showEventModal(ev.emoji, ev.name, `章鱼触手把你卷回第${target}格！`);
+            await animateMove(player, target, engine.players, 120);
+            break;
+          }
+          case 'STORM': {
+            const back = Math.floor(Math.random() * 3) + 2; // 2-4
+            addLog(`${player.emoji} ${ev.emoji} 遇到风暴！后退${back}格！`, 'negative');
+            await showEventModal(ev.emoji, ev.name, `暴风雨来了！后退${back}格！`);
+            await animateMove(player, Math.max(player.position - back, 1), engine.players);
+            break;
+          }
+          case 'ISLAND': {
+            player.skipTurns = 1;
+            addLog(`${player.emoji} ${ev.emoji} 美丽小岛！下回合跳过！`, 'negative');
+            await showEventModal(ev.emoji, ev.name, '风景太美了，停下来玩一天！下回合跳过。');
+            break;
+          }
+          case 'SHARK': {
+            const harbor = SAFE_HARBORS.filter(h => h <= player.position).pop() || 1;
+            addLog(`${player.emoji} ${ev.emoji} 鲨鱼出没！退到安全港第${harbor}格！`, 'negative');
+            await showEventModal(ev.emoji, ev.name, `鲨鱼来了！退到最近的安全港第${harbor}格！`);
+            await animateMove(player, harbor, engine.players, 120);
+            break;
+          }
+          case 'CURRENT': {
+            const others = engine.players.filter(p => p.id !== player.id && p.position > 0);
+            if (others.length === 0) {
+              addLog(`${player.emoji} 🌊 神秘海流 — 没有其他玩家可以交换！`);
+              break;
+            }
+            const target = others[0];
+            addLog(`${player.emoji} 🌊 神秘海流！与 ${target.emoji}${target.name} 交换位置！`, 'interactive');
+            await showEventModal(ev.emoji, ev.name, `海流把船冲到一起！与${target.name}交换位置！`);
+            [player.position, target.position] = [target.position, player.position];
+            board.drawBoard(engine.players);
+            await sleep(500);
+            break;
+          }
+          case 'DUEL': {
+            const opponents = engine.players.filter(p => p.id !== player.id && p.position > 0);
+            if (opponents.length === 0) {
+              addLog(`${player.emoji} ⚔️ 海上决斗 — 没有对手！`);
+              break;
+            }
+            const opp = opponents[Math.floor(Math.random() * opponents.length)];
+            addLog(`${player.emoji} ⚔️ 与 ${opp.emoji}${opp.name} 决斗！`, 'interactive');
+            await showEventModal(ev.emoji, ev.name, `与${opp.name}发起友好决斗！双方掷骰子…`);
+            const r1 = Math.floor(Math.random() * 6) + 1;
+            const r2 = Math.floor(Math.random() * 6) + 1;
+            addLog(`${player.emoji}掷${r1} vs ${opp.emoji}掷${r2}`);
+            if (r1 > r2) {
+              addLog(`${player.emoji} 赢了！前进2格！`, 'positive');
+              await animateMove(player, Math.min(player.position + 2, 100), engine.players);
+              await animateMove(opp, Math.max(opp.position - 2, 1), engine.players);
+            } else if (r2 > r1) {
+              addLog(`${player.emoji} 输了！后退2格！`, 'negative');
+              await animateMove(player, Math.max(player.position - 2, 1), engine.players);
+              await animateMove(opp, Math.min(opp.position + 2, 100), engine.players);
+            } else {
+              addLog(`平局！各不移动。`);
+            }
+            break;
+          }
+          case 'SHARE': {
+            addLog(`${player.emoji} 🎁 分享宝藏！所有玩家各前进1格！`, 'interactive');
+            await showEventModal(ev.emoji, ev.name, '好东西一起分享！所有玩家各前进1格！');
+            for (const p of engine.players) {
+              if (p.position > 0) await animateMove(p, Math.min(p.position + 1, 100), engine.players, 100);
+            }
+            break;
+          }
+          case 'CARNIVAL': {
+            addLog(`${player.emoji} 🎪 海上嘉年华！所有玩家掷骰子比大小！`, 'interactive');
+            await showEventModal(ev.emoji, ev.name, '海上派对！所有玩家掷骰子，点数最大的前进3格！');
+            let maxRoll = 0, winner = null;
+            for (const p of engine.players) {
+              if (p.position === 0) continue;
+              const r = Math.floor(Math.random() * 6) + 1;
+              addLog(`  ${p.emoji}${p.name} 掷了 ${r}`);
+              if (r > maxRoll) { maxRoll = r; winner = p; }
+            }
+            if (winner) {
+              addLog(`${winner.emoji} 获胜！前进3格！`, 'positive');
+              await animateMove(winner, Math.min(winner.position + 3, 100), engine.players);
+            }
+            break;
+          }
+          case 'MAGNET': {
+            const others2 = engine.players.filter(p => p.id !== player.id && p.position > 0);
+            if (others2.length === 0) {
+              addLog(`${player.emoji} 🧲 磁力锚 — 没有对手！`);
+              break;
+            }
+            const closest = others2.reduce((a, b) =>
+              Math.abs(b.position - player.position) < Math.abs(a.position - player.position) ? b : a
+            );
+            addLog(`${player.emoji} 🧲 磁力锚！把 ${closest.emoji}${closest.name} 拉到旁边！`, 'interactive');
+            await showEventModal(ev.emoji, ev.name, `强大的磁力！把${closest.name}拉到你旁边！`);
+            const pullTo = Math.max(1, Math.min(100, player.position + (closest.position > player.position ? 1 : -1)));
+            await animateMove(closest, pullTo, engine.players, 120);
+            break;
+          }
+          case 'SPIN': {
+            const spinnable = Object.keys(EVENT_TYPES).filter(id =>
+              id !== 'SPIN' && id !== 'CARNIVAL' && id !== 'MAGNET' && id !== 'CURRENT'
+            );
+            const randomId = spinnable[Math.floor(Math.random() * spinnable.length)];
+            addLog(`${player.emoji} 🎲 幸运转盘！随机触发：${EVENT_TYPES[randomId].name}！`, 'interactive');
+            await showEventModal(ev.emoji, ev.name, `转盘停在：${EVENT_TYPES[randomId].emoji} ${EVENT_TYPES[randomId].name}！`);
+            await this.trigger(randomId, player, engine);
+            break;
+          }
+        }
+
+        renderPlayersPanel(engine.players, engine.currentIndex);
       }
     }
 
