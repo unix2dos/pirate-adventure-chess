@@ -161,6 +161,29 @@
       z-index: 100;
     }
     .screen.hidden { display: none; }
+    .player-count-btn {
+      padding: 8px 18px;
+      border: 2px solid #334;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .player-count-btn.selected {
+      border-color: #4a9eff;
+      background: rgba(74, 158, 255, 0.2);
+    }
+    .player-name-input {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid #335;
+      border-radius: 8px;
+      color: #fff;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      width: 140px;
+    }
+    @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
   </style>
 </head>
 <body>
@@ -195,25 +218,86 @@
 
   <!-- Start Screen -->
   <div id="start-screen" class="screen">
-    <div style="text-align:center; max-width:400px;">
-      <h1 style="font-size:2.5rem; margin-bottom:1rem;">🏴‍☠️ 海盗冒险棋</h1>
-      <p style="color:#aaa; margin-bottom:2rem;">第一个到达宝箱(100格)的玩家获胜！</p>
-      <button id="btn-start" style="padding:12px 40px; font-size:1.2rem; cursor:pointer;">
-        ⚓ 开始冒险
-      </button>
+    <div style="text-align:center; max-width:480px; width:100%; padding:20px;">
+      <h1 style="font-size:2.2rem; margin-bottom:0.5rem;">🏴‍☠️ 海盗冒险棋</h1>
+      <p style="color:#aaa; margin-bottom:1.5rem; font-size:0.95rem;">
+        第一个到达宝箱(100格)的玩家获胜！
+      </p>
+      <div style="margin-bottom:1.2rem;">
+        <div style="font-size:0.85rem; color:#4a9eff; text-transform:uppercase; margin-bottom:8px;">
+          玩家数量
+        </div>
+        <div style="display:flex; gap:8px; justify-content:center;">
+          <button class="player-count-btn" data-count="1">1人</button>
+          <button class="player-count-btn selected" data-count="2">2人</button>
+          <button class="player-count-btn" data-count="3">3人</button>
+          <button class="player-count-btn" data-count="4">4人</button>
+        </div>
+      </div>
+      <div id="player-setup" style="margin-bottom:1.5rem;"></div>
+      <label style="display:flex; align-items:center; gap:8px; justify-content:center; margin-bottom:1.5rem; cursor:pointer;">
+        <input type="checkbox" id="ai-toggle" checked style="width:18px;height:18px;">
+        <span>🤖 AI对手（自动操控剩余玩家）</span>
+      </label>
+      <button id="btn-start" style="
+        padding:14px 50px; font-size:1.1rem; cursor:pointer;
+        background:#4a9eff; color:#fff; border:none; border-radius:12px;
+        font-weight:bold; letter-spacing:1px;
+      ">⚓ 开始冒险</button>
     </div>
   </div>
 
   <!-- Win Screen -->
   <div id="win-screen" class="screen hidden">
-    <div style="text-align:center;">
-      <div style="font-size:4rem;">🏆</div>
-      <h2 id="win-message" style="font-size:2rem; margin: 1rem 0;"></h2>
-      <button id="btn-replay" style="padding:10px 30px; font-size:1.1rem; cursor:pointer;">
-        🔄 再来一局
-      </button>
+    <canvas id="confetti-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:199;"></canvas>
+    <div style="text-align:center; max-width:400px; position:relative; z-index:201;">
+      <div style="font-size:4rem; animation: bounce 0.5s infinite alternate;">🏆</div>
+      <h2 id="win-message" style="font-size:1.8rem; margin: 1rem 0; color:#ffd700;"></h2>
+      <div id="win-ranking" style="margin: 1rem 0; font-size:1rem; color:#ccd;"></div>
+      <button id="btn-replay" style="
+        padding:10px 30px; font-size:1rem; cursor:pointer;
+        background:#4a9eff; color:#fff; border:none; border-radius:10px; margin-top:8px;
+      ">🔄 再来一局</button>
     </div>
   </div>
+
+  <div id="rules-modal" style="
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8);
+  z-index:300; align-items:center; justify-content:center;
+">
+  <div style="
+    background:#1a2a3a; border:2px solid #4a9eff; border-radius:16px;
+    padding:24px; max-width:500px; max-height:80vh; overflow-y:auto;
+  ">
+    <h2 style="margin-bottom:1rem;">📜 游戏规则</h2>
+    <p style="color:#ccd; line-height:1.8; font-size:0.9rem;">
+      <strong>目标：</strong>第一个到达第100格（宝箱）的玩家获胜！<br><br>
+      <strong>基本规则：</strong>轮流掷骰子，按点数前进。<br><br>
+      <strong>特殊格子：</strong><br>
+      🦜 鹦鹉送信 — 跳到前方格<br>
+      🗺️ 藏宝图 — 额外掷一次骰子<br>
+      🐬 海豚助力 — 前进3格<br>
+      🌈 彩虹桥 — 传送到对应彩虹格<br>
+      ⭐ 许愿星 — 选择前进1-3格<br>
+      🐢 海龟顺风车 — 接下来2回合各+1格<br>
+      🐙 大章鱼 — 退到指定格<br>
+      🌪️ 风暴 — 后退2-4格<br>
+      🏝️ 美丽小岛 — 下回合跳过<br>
+      🦈 鲨鱼出没 — 退到最近安全港<br>
+      🌊 神秘海流 — 与对手交换位置<br>
+      ⚔️ 海上决斗 — 比骰子，赢+2输-2<br>
+      🎁 分享宝藏 — 所有玩家+1格<br>
+      🎪 海上嘉年华 — 全员掷骰，赢家+3<br>
+      🧲 磁力锚 — 把最近对手拉来<br>
+      🎲 幸运转盘 — 随机触发另一事件
+    </p>
+    <button onclick="document.getElementById('rules-modal').style.display='none'"
+            style="margin-top:1rem; padding:8px 20px; background:#4a9eff;
+                   color:#fff; border:none; border-radius:8px; cursor:pointer;">
+      关闭
+    </button>
+  </div>
+</div>
 
   <div id="event-modal">
   <div class="event-card">
@@ -506,6 +590,61 @@
       while (log.children.length > 30) log.lastChild.remove();
     }
 
+    // ── AUDIO ──────────────────────────────────────────────────────────────────
+    class AudioManager {
+      constructor() {
+        this.enabled = true;
+        this.ctx = null;
+      }
+
+      _ensureCtx() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      _beep(freq, duration, type = 'sine', gain = 0.3) {
+        if (!this.enabled) return;
+        this._ensureCtx();
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(gain, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+        osc.connect(g);
+        g.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      }
+
+      rollDice() {
+        [200, 300, 400, 300, 250].forEach((f, i) =>
+          setTimeout(() => this._beep(f, 0.08, 'square'), i * 60)
+        );
+      }
+
+      move() { this._beep(440, 0.06, 'sine', 0.15); }
+
+      positiveEvent() {
+        [523, 659, 784].forEach((f, i) =>
+          setTimeout(() => this._beep(f, 0.15, 'sine'), i * 100)
+        );
+      }
+
+      negativeEvent() {
+        [400, 300, 200].forEach((f, i) =>
+          setTimeout(() => this._beep(f, 0.2, 'sawtooth', 0.2), i * 100)
+        );
+      }
+
+      win() {
+        [523, 523, 659, 784, 1047].forEach((f, i) =>
+          setTimeout(() => this._beep(f, 0.3, 'sine', 0.4), i * 150)
+        );
+      }
+    }
+
+    let audio; // initialized in startGame
+
     // ── HELPERS ────────────────────────────────────────────────────────────────
     function sleep(ms) {
       return new Promise(r => setTimeout(r, ms));
@@ -520,6 +659,7 @@
           player.position += step;
           if (player.position < 1) player.position = 1;
           if (player.position > 100) player.position = 100;
+          if (typeof audio !== 'undefined' && audio) audio.move();
           board.drawBoard(players);
           if (player.position === targetPos) {
             resolve();
@@ -568,6 +708,11 @@
         const ev = EVENT_TYPES[eventId];
         const logType = ev.type === 'positive' ? 'positive' :
                         ev.type === 'negative' ? 'negative' : 'interactive';
+
+        if (audio) {
+          if (ev.type === 'positive') audio.positiveEvent();
+          else if (ev.type === 'negative') audio.negativeEvent();
+        }
 
         switch (eventId) {
           case 'PARROT': {
@@ -784,6 +929,7 @@
         // Roll dice
         const roll = await this.dice.roll();
         if (roll === null) return; // concurrent call guard
+        if (audio) audio.rollDice();
         let moveBy = roll + (player.turtleBuff > 0 ? 1 : 0);
         if (player.turtleBuff > 0) player.turtleBuff--;
         addLog(`${player.emoji} ${player.name} 掷出 ${roll}${moveBy > roll ? '(+1🐢)' : ''} 点`);
@@ -829,9 +975,16 @@
       showWin(player) {
         this.gameOver = true;
         document.getElementById('btn-roll').disabled = true;
+        const sorted = [...this.players].sort((a, b) => b.position - a.position);
+        const medals = ['🥇', '🥈', '🥉', '4️⃣'];
+        document.getElementById('win-ranking').innerHTML = sorted.map((p, i) =>
+          `<div style="margin:4px;">${medals[i]} ${p.emoji} ${p.name} — 第${p.position}格</div>`
+        ).join('');
         document.getElementById('win-message').textContent =
-          `${player.emoji} ${player.name} 到达宝箱，赢了！🎉`;
+          `${player.emoji} ${player.name} 到达宝箱！`;
         document.getElementById('win-screen').classList.remove('hidden');
+        if (audio) audio.win();
+        startConfetti();
       }
     }
 
@@ -840,6 +993,7 @@
 
     function startGame(playerConfigs) {
       let configs = playerConfigs;
+      audio = new AudioManager();
       // Ensure at least 2 participants (add AI if only 1 human)
       if (configs.length === 1 && !configs[0].isAI) {
         configs = [...configs, { name: 'AI海盗', isAI: true }];
@@ -868,18 +1022,115 @@
       engine.enableRollForCurrentPlayer();
     }
 
-    document.getElementById('btn-start').addEventListener('click', () => {
-      document.getElementById('start-screen').classList.add('hidden');
-      startGame([
-        { name: '你', isAI: false },
-        { name: 'AI海盗', isAI: true },
-      ]);
-    });
-
     document.getElementById('btn-replay').addEventListener('click', () => {
       document.getElementById('win-screen').classList.add('hidden');
       document.getElementById('log-panel').innerHTML = '';
       document.getElementById('start-screen').classList.remove('hidden');
+    });
+
+    // ── CONFETTI ────────────────────────────────────────────────────────────────
+    function startConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const particles = Array.from({ length: 120 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * -canvas.height,
+        r: Math.random() * 6 + 3,
+        color: `hsl(${Math.random() * 360}, 80%, 60%)`,
+        vx: (Math.random() - 0.5) * 2,
+        vy: Math.random() * 3 + 2,
+        spin: Math.random() * 0.2 - 0.1,
+        angle: 0,
+      }));
+      let frame;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.angle += p.spin;
+          if (p.y > canvas.height) p.y = -10;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.angle);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+          ctx.restore();
+        });
+        frame = requestAnimationFrame(draw);
+      }
+      draw();
+      setTimeout(() => { cancelAnimationFrame(frame); ctx.clearRect(0, 0, canvas.width, canvas.height); }, 5000);
+    }
+
+    // ── START SCREEN LOGIC ─────────────────────────────────────────────────────
+    const DEFAULT_NAMES = ['你', '海盗甲', '海盗乙', '海盗丙'];
+    let selectedCount = 2;
+
+    function renderPlayerSetup(count) {
+      const container = document.getElementById('player-setup');
+      container.innerHTML = Array.from({ length: count }, (_, i) => `
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; justify-content:center;">
+          <span style="font-size:1.2rem;">${PLAYER_EMOJIS[i]}</span>
+          <input class="player-name-input" id="pname-${i}"
+                 placeholder="玩家${i+1}名字"
+                 value="${DEFAULT_NAMES[i]}"
+                 maxlength="8">
+          <span style="color: ${PLAYER_COLORS[i]};">●</span>
+        </div>
+      `).join('');
+    }
+
+    document.querySelectorAll('.player-count-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.player-count-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedCount = parseInt(btn.dataset.count);
+        renderPlayerSetup(selectedCount);
+      });
+    });
+
+    // Initialize player setup
+    renderPlayerSetup(selectedCount);
+
+    // Override btn-start to use the player setup form
+    // (remove old listener by replacing the button with its clone, then add new listener)
+    const oldStartBtn = document.getElementById('btn-start');
+    const newStartBtn = oldStartBtn.cloneNode(true);
+    oldStartBtn.parentNode.replaceChild(newStartBtn, oldStartBtn);
+
+    newStartBtn.addEventListener('click', () => {
+      const useAI = document.getElementById('ai-toggle').checked;
+      const configs = Array.from({ length: selectedCount }, (_, i) => ({
+        name: (document.getElementById(`pname-${i}`)?.value || DEFAULT_NAMES[i]).trim() || DEFAULT_NAMES[i],
+        isAI: useAI && i > 0,
+      }));
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('log-panel').innerHTML = '';
+      startGame(configs);
+    });
+
+    // ── SOUND TOGGLE ────────────────────────────────────────────────────────────
+    document.getElementById('btn-sound').addEventListener('click', () => {
+      if (!audio) return;
+      audio.enabled = !audio.enabled;
+      document.getElementById('btn-sound').textContent = audio.enabled ? '🔊 音效' : '🔇 静音';
+    });
+
+    // ── RULES MODAL ─────────────────────────────────────────────────────────────
+    document.getElementById('btn-rules').addEventListener('click', () => {
+      document.getElementById('rules-modal').style.display = 'flex';
+    });
+
+    // ── RESIZE HANDLER ──────────────────────────────────────────────────────────
+    window.addEventListener('resize', () => {
+      if (!board || !engine || engine.gameOver) return;
+      const oldCells = board.cells;
+      board = new Board(document.getElementById('board-canvas'));
+      board.cells.forEach((cell, i) => {
+        cell.event = oldCells[i].event;
+      });
+      board.drawBoard(engine.players);
     });
   </script>
 </body>
