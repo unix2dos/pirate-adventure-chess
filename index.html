@@ -58,6 +58,70 @@
       background: rgba(0,0,0,0.3);
       font-size: 0.85rem;
     }
+    .panel-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #4a9eff;
+  margin-bottom: 6px;
+}
+#players-panel .player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  background: rgba(255,255,255,0.05);
+  transition: background 0.3s;
+}
+#players-panel .player-row.active {
+  background: rgba(74, 158, 255, 0.2);
+  border: 1px solid #4a9eff;
+}
+#dice-panel {
+  text-align: center;
+  padding: 10px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+}
+#dice-display {
+  font-size: 3rem;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#btn-roll {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  background: #4a9eff;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  margin-top: 8px;
+}
+#btn-roll:disabled {
+  background: #333;
+  cursor: not-allowed;
+}
+#log-panel {
+  flex: 1;
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+  padding: 8px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #ccd;
+  min-height: 100px;
+}
+.log-entry { margin-bottom: 4px; }
+.log-entry.positive { color: #6f6; }
+.log-entry.negative { color: #f66; }
+.log-entry.interactive { color: #69f; }
     /* Screen overlays */
     .screen {
       position: fixed;
@@ -78,9 +142,19 @@
       <canvas id="board-canvas"></canvas>
     </div>
     <div id="sidebar">
-      <div id="players-panel"></div>
-      <div id="dice-panel"></div>
-      <div id="log-panel"></div>
+      <div>
+        <div class="panel-title">👤 玩家</div>
+        <div id="players-panel"></div>
+      </div>
+      <div id="dice-panel">
+        <div class="panel-title">🎲 骰子</div>
+        <div id="dice-display">—</div>
+        <button id="btn-roll" disabled>掷骰子</button>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="panel-title">📜 事件日志</div>
+        <div id="log-panel"></div>
+      </div>
     </div>
   </div>
   <div id="footer">
@@ -114,8 +188,306 @@
   </div>
 
   <script>
-    // TODO: game code goes here
-    console.log('海盗冒险棋 initialized');
+    // ── CONSTANTS ──────────────────────────────────────────────────────────────
+    const CELL_COUNT = 100;
+    const BOARD_PADDING = 30;
+
+    // Compute spiral coordinates for cells 1-100.
+    // Returns array indexed 0-99 (cell[0] = square #1, cell[99] = square #100).
+    // Layout: outer ring goes left-to-right on bottom, right side goes up,
+    // top goes right-to-left, left side goes down — spiraling inward.
+    function computeSpiralCoords(canvasSize, padding) {
+      const cells = new Array(CELL_COUNT);
+      const gridSize = Math.floor((canvasSize - padding * 2) / 10); // 10×10 grid
+      const origin = { x: padding, y: padding + gridSize * 9 }; // bottom-left
+
+      let pos = 0;       // next cell index to fill (0-based)
+      let left = 0, right = 9, top = 0, bottom = 9;
+
+      while (pos < CELL_COUNT) {
+        // Bottom row: left → right
+        for (let c = left; c <= right && pos < CELL_COUNT; c++) {
+          cells[pos++] = {
+            x: origin.x + c * gridSize,
+            y: origin.y - (9 - bottom) * gridSize
+          };
+        }
+        bottom--;
+        // Right column: bottom → top
+        for (let r = bottom; r >= top && pos < CELL_COUNT; r--) {
+          cells[pos++] = {
+            x: origin.x + right * gridSize,
+            y: origin.y - (9 - r) * gridSize
+          };
+        }
+        right--;
+        // Top row: right → left
+        for (let c = right; c >= left && pos < CELL_COUNT; c--) {
+          cells[pos++] = {
+            x: origin.x + c * gridSize,
+            y: origin.y - (9 - top) * gridSize
+          };
+        }
+        top++;
+        // Left column: top → bottom
+        for (let r = top; r <= bottom && pos < CELL_COUNT; r++) {
+          cells[pos++] = {
+            x: origin.x + left * gridSize,
+            y: origin.y - (9 - r) * gridSize
+          };
+        }
+        left++;
+      }
+
+      return cells.map((c, i) => ({ ...c, index: i + 1, size: gridSize, event: null }));
+    }
+
+    // ── BOARD ──────────────────────────────────────────────────────────────────
+    class Board {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.size = Math.min(
+          canvas.parentElement.clientWidth - 20,
+          canvas.parentElement.clientHeight - 20
+        );
+        canvas.width = this.size;
+        canvas.height = this.size;
+        this.cells = computeSpiralCoords(this.size, BOARD_PADDING);
+      }
+
+      drawCell(cell, highlight = false) {
+        const { ctx } = this;
+        const s = cell.size;
+        const x = cell.x + 1;
+        const y = cell.y + 1;
+        const w = s - 2;
+
+        // Background
+        ctx.fillStyle = highlight ? '#ffd700' : (cell.event ? cell.event.bgColor : '#1a4a7a');
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, w, 4);
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = '#2a6aaa';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Cell number
+        ctx.fillStyle = highlight ? '#000' : '#cce';
+        ctx.font = `bold ${Math.floor(s * 0.22)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(cell.index, x + w / 2, y + 2);
+
+        // Event emoji
+        if (cell.event) {
+          ctx.font = `${Math.floor(s * 0.32)}px sans-serif`;
+          ctx.textBaseline = 'middle';
+          ctx.fillText(cell.event.emoji, x + w / 2, y + w * 0.65);
+        }
+      }
+
+      drawBoard(players = [], highlightCells = []) {
+        const { ctx, size } = this;
+        // Ocean background
+        ctx.fillStyle = '#0d2d4a';
+        ctx.fillRect(0, 0, size, size);
+
+        // Draw cells
+        this.cells.forEach(cell => {
+          this.drawCell(cell, highlightCells.includes(cell.index));
+        });
+
+        // Center treasure (cell 100)
+        const c100 = this.cells[99];
+        ctx.font = `${Math.floor(c100.size * 0.5)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🏆', c100.x + c100.size / 2, c100.y + c100.size / 2);
+
+        // Draw player pieces
+        this.drawPieces(players);
+      }
+
+      drawPieces(players) {
+        const { ctx } = this;
+        players.forEach((player, i) => {
+          if (player.position === 0) return;
+          const cell = this.getCell(player.position);
+          if (!cell) return;
+          const s = cell.size;
+          // Offset pieces within cell so multiple players on same cell are visible
+          const offX = (i % 2) * (s * 0.35);
+          const offY = Math.floor(i / 2) * (s * 0.35);
+          const cx = cell.x + s * 0.25 + offX;
+          const cy = cell.y + s * 0.45 + offY;
+
+          // Circle background
+          ctx.beginPath();
+          ctx.arc(cx, cy, s * 0.18, 0, Math.PI * 2);
+          ctx.fillStyle = player.color;
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Initial letter
+          ctx.fillStyle = '#fff';
+          ctx.font = `bold ${Math.floor(s * 0.18)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(player.name[0], cx, cy);
+        });
+      }
+
+      getCell(index) {
+        return this.cells[index - 1];
+      }
+    }
+
+    // ── EVENT DEFINITIONS ──────────────────────────────────────────────────────
+    const EVENT_TYPES = {
+      PARROT:     { id: 'PARROT',    emoji: '🦜', name: '鹦鹉送信',   bgColor: '#1a5a2a', type: 'positive' },
+      TREASURE_MAP:{ id: 'TREASURE_MAP', emoji: '🗺️', name: '藏宝图', bgColor: '#4a3a10', type: 'positive' },
+      DOLPHIN:    { id: 'DOLPHIN',   emoji: '🐬', name: '海豚助力',   bgColor: '#1a4a5a', type: 'positive' },
+      RAINBOW:    { id: 'RAINBOW',   emoji: '🌈', name: '彩虹桥',     bgColor: '#3a1a5a', type: 'positive' },
+      WISH_STAR:  { id: 'WISH_STAR', emoji: '⭐', name: '许愿星',     bgColor: '#4a4a10', type: 'positive' },
+      TURTLE:     { id: 'TURTLE',   emoji: '🐢', name: '海龟顺风车', bgColor: '#1a4a2a', type: 'positive' },
+      OCTOPUS:    { id: 'OCTOPUS',  emoji: '🐙', name: '大章鱼',     bgColor: '#4a1a1a', type: 'negative' },
+      STORM:      { id: 'STORM',    emoji: '🌪️', name: '遇到风暴',   bgColor: '#2a2a4a', type: 'negative' },
+      ISLAND:     { id: 'ISLAND',   emoji: '🏝️', name: '美丽小岛',   bgColor: '#2a4a1a', type: 'negative' },
+      SHARK:      { id: 'SHARK',    emoji: '🦈', name: '鲨鱼出没',   bgColor: '#4a2a1a', type: 'negative' },
+      CURRENT:    { id: 'CURRENT',  emoji: '🌊', name: '神秘海流',   bgColor: '#1a2a4a', type: 'interactive' },
+      DUEL:       { id: 'DUEL',     emoji: '⚔️', name: '海上决斗',   bgColor: '#4a2a2a', type: 'interactive' },
+      SHARE:      { id: 'SHARE',    emoji: '🎁', name: '分享宝藏',   bgColor: '#2a4a4a', type: 'interactive' },
+      CARNIVAL:   { id: 'CARNIVAL', emoji: '🎪', name: '海上嘉年华', bgColor: '#4a3a4a', type: 'interactive' },
+      MAGNET:     { id: 'MAGNET',   emoji: '🧲', name: '磁力锚',     bgColor: '#3a3a4a', type: 'interactive' },
+      SPIN:       { id: 'SPIN',     emoji: '🎲', name: '幸运转盘',   bgColor: '#4a4a2a', type: 'interactive' },
+    };
+
+    // Cell assignments: which cell number gets which event
+    const PARROT_JUMPS = { 4: 14, 9: 31, 20: 38, 51: 67 };
+    const OCTOPUS_DROPS = { 17: 7, 54: 34, 62: 44, 87: 70 };
+    const RAINBOW_PAIRS = { 26: 82, 74: 19 };
+    const SAFE_HARBORS = [10, 30, 50, 70];
+
+    const CELL_EVENTS = {
+      4: 'PARROT', 9: 'PARROT', 20: 'PARROT', 51: 'PARROT',
+      6: 'TREASURE_MAP', 33: 'TREASURE_MAP', 76: 'TREASURE_MAP',
+      13: 'DOLPHIN', 58: 'DOLPHIN',
+      26: 'RAINBOW', 74: 'RAINBOW',
+      42: 'WISH_STAR', 89: 'WISH_STAR',
+      37: 'TURTLE', 68: 'TURTLE',
+      17: 'OCTOPUS', 54: 'OCTOPUS', 62: 'OCTOPUS', 87: 'OCTOPUS',
+      29: 'STORM', 57: 'STORM', 93: 'STORM',
+      45: 'ISLAND', 71: 'ISLAND',
+      22: 'SHARK', 83: 'SHARK',
+      39: 'CURRENT',
+      48: 'DUEL', 77: 'DUEL',
+      15: 'SHARE', 60: 'SHARE',
+      85: 'CARNIVAL',
+      52: 'MAGNET',
+      25: 'SPIN', 66: 'SPIN',
+    };
+
+    // ── PLAYER ─────────────────────────────────────────────────────────────────
+    const PLAYER_COLORS = ['#ff4444', '#4488ff', '#44cc44', '#ffaa00'];
+    const PLAYER_EMOJIS = ['🔴', '🔵', '🟢', '🟡'];
+
+    class Player {
+      constructor(id, name, color, isAI = false) {
+        this.id = id;
+        this.name = name;
+        this.color = color;
+        this.emoji = PLAYER_EMOJIS[id];
+        this.isAI = isAI;
+        this.position = 0;    // 0 = not yet on board; 1-100 = cell number
+        this.skipTurns = 0;   // for ISLAND event
+        this.turtleBuff = 0;  // remaining turns of +1 movement
+      }
+    }
+
+    // ── DICE ───────────────────────────────────────────────────────────────────
+    const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+    class Dice {
+      constructor(displayEl) {
+        this.displayEl = displayEl;
+        this.rolling = false;
+      }
+
+      roll() {
+        return new Promise(resolve => {
+          if (this.rolling) return;
+          this.rolling = true;
+          let count = 0;
+          const total = 12;
+          const interval = setInterval(() => {
+            const face = Math.floor(Math.random() * 6);
+            this.displayEl.textContent = DICE_FACES[face];
+            count++;
+            if (count >= total) {
+              clearInterval(interval);
+              const result = Math.floor(Math.random() * 6) + 1;
+              this.displayEl.textContent = DICE_FACES[result - 1];
+              this.rolling = false;
+              resolve(result);
+            }
+          }, 60);
+        });
+      }
+    }
+
+    // ── UI HELPERS ─────────────────────────────────────────────────────────────
+    function renderPlayersPanel(players, currentPlayerIndex) {
+      const panel = document.getElementById('players-panel');
+      panel.innerHTML = players.map((p, i) => `
+        <div class="player-row ${i === currentPlayerIndex ? 'active' : ''}">
+          <span>${p.emoji}</span>
+          <span style="flex:1">${p.name}${p.isAI ? ' 🤖' : ''}</span>
+          <span style="font-size:0.85rem; color:#4a9eff">格${p.position || '—'}</span>
+          ${p.skipTurns > 0 ? '<span style="color:#f66">⚓跳过</span>' : ''}
+          ${p.turtleBuff > 0 ? '<span style="color:#4f4">🐢+1</span>' : ''}
+        </div>
+      `).join('');
+    }
+
+    function addLog(text, type = 'normal') {
+      const log = document.getElementById('log-panel');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = text;
+      log.prepend(entry);
+      while (log.children.length > 30) log.lastChild.remove();
+    }
+
+    // ── STUB ── (will be replaced in Task 6)
+    let board;
+
+    function startGame(playerConfigs) {
+      board = new Board(document.getElementById('board-canvas'));
+      board.cells.forEach(cell => {
+        const evId = CELL_EVENTS[cell.index];
+        if (evId) cell.event = EVENT_TYPES[evId];
+      });
+      const players = playerConfigs.map((cfg, i) =>
+        new Player(i, cfg.name, PLAYER_COLORS[i], cfg.isAI)
+      );
+      players.forEach(p => { p.position = 1; });
+      board.drawBoard(players);
+      renderPlayersPanel(players, 0);
+      addLog('🏴‍☠️ 游戏开始！第一个到达100格获胜！');
+    }
+
+    document.getElementById('btn-start').addEventListener('click', () => {
+      document.getElementById('start-screen').classList.add('hidden');
+      startGame([
+        { name: '你', isAI: false },
+        { name: 'AI海盗', isAI: true },
+      ]);
+    });
   </script>
 </body>
 </html>
