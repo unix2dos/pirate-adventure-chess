@@ -192,51 +192,55 @@
     const CELL_COUNT = 100;
     const BOARD_PADDING = 30;
 
-    // Compute spiral coordinates for cells 1-100.
-    // Returns array indexed 0-99 (cell[0] = square #1, cell[99] = square #100).
-    // Layout: outer ring goes left-to-right on bottom, right side goes up,
-    // top goes right-to-left, left side goes down — spiraling inward.
     function computeSpiralCoords(canvasSize, padding) {
       const cells = new Array(CELL_COUNT);
-      const gridSize = Math.floor((canvasSize - padding * 2) / 10); // 10×10 grid
-      const origin = { x: padding, y: padding + gridSize * 9 }; // bottom-left
+      const gridSize = Math.floor((canvasSize - padding * 2) / 10);
+      const origin = { x: padding, y: padding }; // top-left of grid
 
-      let pos = 0;       // next cell index to fill (0-based)
-      let left = 0, right = 9, top = 0, bottom = 9;
+      let pos = 0;
+
+      // rows 0-9 from top, cols 0-9 from left.
+      // Cell 1 is at visual bottom-left = row 9, col 0.
+      // We spiral: bottom-row L→R, right-col B→T, top-row R→L, left-col T→B (inward)
+
+      let rowBottom = 9, rowTop = 0, colLeft = 0, colRight = 9;
 
       while (pos < CELL_COUNT) {
-        // Bottom row: left → right
-        for (let c = left; c <= right && pos < CELL_COUNT; c++) {
+        // Bottom row: left → right (visual bottom = highest row index)
+        for (let c = colLeft; c <= colRight && pos < CELL_COUNT; c++) {
           cells[pos++] = {
             x: origin.x + c * gridSize,
-            y: origin.y - (9 - bottom) * gridSize
+            y: origin.y + rowBottom * gridSize
           };
         }
-        bottom--;
-        // Right column: bottom → top
-        for (let r = bottom; r >= top && pos < CELL_COUNT; r--) {
+        rowBottom--;
+
+        // Right column: bottom → top (decreasing row index = going up)
+        for (let r = rowBottom; r >= rowTop && pos < CELL_COUNT; r--) {
           cells[pos++] = {
-            x: origin.x + right * gridSize,
-            y: origin.y - (9 - r) * gridSize
+            x: origin.x + colRight * gridSize,
+            y: origin.y + r * gridSize
           };
         }
-        right--;
+        colRight--;
+
         // Top row: right → left
-        for (let c = right; c >= left && pos < CELL_COUNT; c--) {
+        for (let c = colRight; c >= colLeft && pos < CELL_COUNT; c--) {
           cells[pos++] = {
             x: origin.x + c * gridSize,
-            y: origin.y - (9 - top) * gridSize
+            y: origin.y + rowTop * gridSize
           };
         }
-        top++;
-        // Left column: top → bottom
-        for (let r = top; r <= bottom && pos < CELL_COUNT; r++) {
+        rowTop++;
+
+        // Left column: top → bottom (increasing row = going down)
+        for (let r = rowTop; r <= rowBottom && pos < CELL_COUNT; r++) {
           cells[pos++] = {
-            x: origin.x + left * gridSize,
-            y: origin.y - (9 - r) * gridSize
+            x: origin.x + colLeft * gridSize,
+            y: origin.y + r * gridSize
           };
         }
-        left++;
+        colLeft++;
       }
 
       return cells.map((c, i) => ({ ...c, index: i + 1, size: gridSize, event: null }));
@@ -370,6 +374,8 @@
     // Cell assignments: which cell number gets which event
     const PARROT_JUMPS = { 4: 14, 9: 31, 20: 38, 51: 67 };
     const OCTOPUS_DROPS = { 17: 7, 54: 34, 62: 44, 87: 70 };
+    // Rainbow bridge pairs: cell → destination (bidirectional teleport)
+    // Cell 26 → 82 (forward), Cell 74 → 19 (backward — the cost of the rainbow!)
     const RAINBOW_PAIRS = { 26: 82, 74: 19 };
     const SAFE_HARBORS = [10, 30, 50, 70];
 
@@ -419,8 +425,8 @@
       }
 
       roll() {
+        if (this.rolling) return Promise.resolve(null);
         return new Promise(resolve => {
-          if (this.rolling) return;
           this.rolling = true;
           let count = 0;
           const total = 12;
