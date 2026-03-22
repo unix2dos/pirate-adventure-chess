@@ -476,6 +476,7 @@
 
     // Move player step-by-step with animation delay
     function animateMove(player, targetPos, players, delay = 180) {
+      if (player.position === targetPos) return Promise.resolve();
       return new Promise(resolve => {
         const step = player.position < targetPos ? 1 : -1;
         const move = () => {
@@ -525,6 +526,7 @@
       }
 
       async doTurn() {
+        if (this.gameOver) return;
         const player = this.currentPlayer;
         const rollBtn = document.getElementById('btn-roll');
         rollBtn.disabled = true;
