@@ -20,6 +20,18 @@ function getOrCreateCanvas(root) {
   return canvas;
 }
 
+function getOrCreateLayer(root, role, className) {
+  let layer = root.querySelector(`[data-role="${role}"]`);
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.dataset.role = role;
+    layer.className = className;
+    root.appendChild(layer);
+  }
+
+  return layer;
+}
+
 function toCanvasPoint(cell, width, height) {
   return {
     x: cell.x * width,
@@ -210,7 +222,74 @@ function drawCrewMarkers(ctx, width, height, crew) {
   });
 }
 
+function renderBoardLabels(root, state = {}) {
+  const labelLayer = getOrCreateLayer(root, 'board-number-layer', 'board-number-layer');
+  const playerLayer = getOrCreateLayer(root, 'board-player-layer', 'board-player-layer');
+  const currentPosition = state.currentPlayer?.position ?? 1;
+  const crew = Array.isArray(state.crew) ? state.crew : [];
+
+  Object.assign(labelLayer.style, {
+    position: 'absolute',
+    inset: '0',
+    pointerEvents: 'none',
+    zIndex: '2',
+  });
+
+  Object.assign(playerLayer.style, {
+    position: 'absolute',
+    inset: '0',
+    pointerEvents: 'none',
+    zIndex: '3',
+  });
+
+  labelLayer.innerHTML = boardPath
+    .map((cell) => {
+      const isCurrent = cell.index === currentPosition;
+      const isLandmark = cell.kind === 'landmark' || cell.kind === 'finish';
+      const offsetY = isLandmark ? -22 : cell.index % 2 === 0 ? 16 : -16;
+
+      return `
+        <span
+          class="board-cell-label ${isLandmark ? 'board-cell-label--landmark' : ''} ${isCurrent ? 'board-cell-label--current' : ''}"
+          data-cell-label="${cell.index}"
+          style="left:${(cell.x * 100).toFixed(2)}%;top:calc(${(cell.y * 100).toFixed(2)}% + ${offsetY}px);"
+        >
+          ${cell.index}
+        </span>
+      `;
+    })
+    .join('');
+
+  playerLayer.innerHTML = crew
+    .map((player, index) => {
+      const cell = getCellMeta(player.position ?? 1);
+      if (!cell) {
+        return '';
+      }
+
+      const offsetX = index % 2 === 0 ? -20 : 20;
+      const offsetY = -38 - Math.floor(index / 2) * 18;
+
+      return `
+        <div
+          class="board-player-chip"
+          data-player-chip="${index + 1}"
+          style="left:calc(${(cell.x * 100).toFixed(2)}% + ${offsetX}px);top:calc(${(cell.y * 100).toFixed(2)}% + ${offsetY}px);--chip-color:${player.color ?? '#ff6b6b'};"
+          title="${index + 1}号 ${player.name}"
+        >
+          <span class="board-player-chip__badge">${index + 1}</span>
+          <span class="board-player-chip__name">${player.name}</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
 export function renderBoardRenderer(root, { state = {}, size = DEFAULT_SIZE } = {}) {
+  if (!root.style.position) {
+    root.style.position = 'relative';
+  }
+
   const canvas = getOrCreateCanvas(root);
   canvas.width = size.width;
   canvas.height = size.height;
@@ -236,6 +315,7 @@ export function renderBoardRenderer(root, { state = {}, size = DEFAULT_SIZE } = 
     state.currentPlayer?.position ?? 1,
   );
   drawCrewMarkers(ctx, size.width, size.height, state.crew ?? []);
+  renderBoardLabels(root, state);
 
   return canvas;
 }

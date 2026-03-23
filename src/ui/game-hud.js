@@ -1,11 +1,11 @@
 function renderCrewItems(crew, currentPlayerId) {
   return crew
-    .map((member) => {
+    .map((member, index) => {
       const active = member.id === currentPlayerId;
       return `
         <li class="crew-pill" data-active="${active}" style="--crew-color:${member.color ?? '#ff6b6b'};">
           <span class="ranking-item__left">
-            <span class="crew-dot" style="--crew-color:${member.color ?? '#ff6b6b'};"></span>
+            <span class="ranking-item__badge">${index + 1}</span>
             <span class="crew-pill__name">${member.name}</span>
           </span>
           <span class="crew-pill__meta">第 ${member.position ?? 1} 格</span>
