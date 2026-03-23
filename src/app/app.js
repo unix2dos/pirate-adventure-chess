@@ -6,6 +6,7 @@ import { createPlayer } from '../core/players.js';
 import { renderBoardRenderer } from '../render/board-renderer.js';
 import { renderAnimationLayer } from '../render/animation-layer.js';
 import { renderGameHud } from '../ui/game-hud.js';
+import { renderEventOverlay } from '../ui/event-overlay.js';
 
 const PLAYER_COLORS = ['#ff6b6b', '#4ecdc4', '#ffd166', '#7a9cff'];
 
@@ -31,9 +32,10 @@ function createHudState(engineState, recentTitle = '准备出航') {
     currentPlayer,
     currentZoneLabel: cellMeta?.zoneLabel ?? '晴空湾',
     currentObjective: cellMeta?.objective ?? '朝宝藏终点冲刺',
-    recentEvent: { title: recentTitle },
+    recentEvent: engineState.recentEvent ?? { title: recentTitle },
     crew: engineState.players,
     gameOver: engineState.gameOver,
+    pendingEvent: engineState.pendingEvent,
   };
 }
 
@@ -42,14 +44,16 @@ function renderGameScene(root, payload = {}) {
   let sceneState = payload.state ?? (engine ? createHudState(engine.getState()) : null);
 
   root.innerHTML = `
-    <section data-scene="game" style="display:flex;gap:18px;align-items:stretch;min-height:640px;padding:12px;box-sizing:border-box;">
+    <section data-scene="game" style="position:relative;display:flex;gap:18px;align-items:stretch;min-height:640px;padding:12px;box-sizing:border-box;">
       <div data-role="board-stage" style="position:relative;flex:1;background:#d7f0ff;border-radius:20px;overflow:hidden;min-height:640px;"></div>
       <div data-role="hud-stage" style="width:320px;display:flex;flex-direction:column;"></div>
+      <div data-role="event-overlay-stage" style="position:absolute;inset:0;"></div>
     </section>
   `;
 
   const boardStage = root.querySelector('[data-role="board-stage"]');
   const hudStage = root.querySelector('[data-role="hud-stage"]');
+  const overlayStage = root.querySelector('[data-role="event-overlay-stage"]');
 
   function renderFrame() {
     if (!sceneState) {
@@ -60,8 +64,25 @@ function renderGameScene(root, payload = {}) {
     renderAnimationLayer(boardStage, { state: sceneState });
     renderGameHud(hudStage, { state: sceneState });
 
+    const pendingEvent = sceneState.pendingEvent?.event;
+    if (pendingEvent && engine) {
+      renderEventOverlay(overlayStage, {
+        event: pendingEvent,
+        onResolve(choiceValue) {
+          const nextEngineState = engine.resolvePendingEvent(choiceValue);
+          sceneState = createHudState(nextEngineState);
+          renderFrame();
+        },
+      });
+    } else {
+      overlayStage.innerHTML = '';
+    }
+
     const rollButton = hudStage.querySelector('[data-role="roll-action"]');
-    if (!rollButton || !engine || sceneState.gameOver) {
+    if (!rollButton || !engine || sceneState.gameOver || pendingEvent) {
+      if (rollButton) {
+        rollButton.disabled = Boolean(sceneState.gameOver || pendingEvent);
+      }
       return;
     }
 

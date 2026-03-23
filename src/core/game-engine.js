@@ -1,9 +1,13 @@
+import { applyBoardEvent, resolveBoardEvent } from './events.js';
+
 export function createGameEngine({ players, rollDice }) {
   const state = {
     players: structuredClone(players),
     currentPlayerIndex: 0,
     turnNumber: 1,
     gameOver: false,
+    pendingEvent: null,
+    recentEvent: null,
   };
 
   function getState() {
@@ -18,13 +22,14 @@ export function createGameEngine({ players, rollDice }) {
   }
 
   async function takeTurn() {
-    if (state.gameOver) {
+    if (state.gameOver || state.pendingEvent) {
       return getState();
     }
 
     const player = state.players[state.currentPlayerIndex];
     if (player.skipTurns > 0) {
       player.skipTurns -= 1;
+      state.recentEvent = { title: `${player.name} 暂停一回合` };
       advanceTurn();
       return getState();
     }
@@ -36,16 +41,68 @@ export function createGameEngine({ players, rollDice }) {
     }
 
     player.position = Math.min(100, player.position + moveBy);
+    state.recentEvent = { title: `${player.name} 前进了 ${moveBy} 格` };
     if (player.position >= 100) {
       state.gameOver = true;
+      state.recentEvent = { title: '宝藏到手，冲线成功' };
+      return getState();
     }
 
-    if (!state.gameOver) {
-      advanceTurn();
+    const boardEvent = resolveBoardEvent(player.position);
+    if (boardEvent?.choices?.length) {
+      state.pendingEvent = {
+        playerId: player.id,
+        event: boardEvent,
+      };
+      state.recentEvent = { title: boardEvent.title };
+      return getState();
     }
+
+    if (boardEvent) {
+      const outcome = applyBoardEvent({
+        player,
+        event: boardEvent,
+      });
+
+      state.recentEvent = outcome ?? { title: boardEvent.title };
+      if (player.position >= 100) {
+        state.gameOver = true;
+        state.recentEvent = { title: '宝藏到手，冲线成功' };
+        return getState();
+      }
+    }
+
+    advanceTurn();
 
     return getState();
   }
 
-  return { getState, takeTurn };
+  function resolvePendingEvent(choiceValue) {
+    if (state.gameOver || !state.pendingEvent) {
+      return getState();
+    }
+
+    const pendingEvent = state.pendingEvent;
+    const player = state.players.find(({ id }) => id === pendingEvent.playerId)
+      ?? state.players[state.currentPlayerIndex];
+    const outcome = applyBoardEvent({
+      player,
+      event: pendingEvent.event,
+      choiceValue,
+    });
+
+    state.pendingEvent = null;
+    state.recentEvent = outcome ?? { title: '遭遇已解决' };
+
+    if (player.position >= 100) {
+      state.gameOver = true;
+      state.recentEvent = { title: '宝藏到手，冲线成功' };
+      return getState();
+    }
+
+    advanceTurn();
+    return getState();
+  }
+
+  return { getState, takeTurn, resolvePendingEvent };
 }
