@@ -278,7 +278,6 @@ function renderBoardLabels(root, state = {}) {
           title="${index + 1}号 ${player.name}"
         >
           <span class="board-player-chip__badge">${index + 1}</span>
-          <span class="board-player-chip__name">${player.name}</span>
         </div>
       `;
     })
