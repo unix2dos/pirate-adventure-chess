@@ -1,12 +1,6 @@
-import { boardPath, getCellMeta, getZoneMeta, zoneOrder } from '../core/board-data.js';
+import { boardPath, boardStickers, getCellMeta } from '../core/board-data.js';
 
-const DEFAULT_SIZE = { width: 960, height: 640 };
-const ZONE_COLORS = {
-  'sunny-bay': '#95dcff',
-  'bubble-strait': '#96f0cf',
-  'octopus-cove': '#7eafff',
-  'treasure-run': '#ffd96f',
-};
+const DEFAULT_SIZE = { width: 940, height: 940 };
 
 function getOrCreateCanvas(root) {
   let canvas = root.querySelector('[data-role="board-canvas"]');
@@ -39,31 +33,18 @@ function toCanvasPoint(cell, width, height) {
   };
 }
 
-function drawSeaBackground(ctx, width, height) {
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, '#9de4ff');
-  gradient.addColorStop(0.4, '#4cc5f4');
-  gradient.addColorStop(1, '#1566b9');
-  ctx.fillStyle = gradient;
+function drawBoardWater(ctx, width, height) {
+  ctx.fillStyle = '#8fd6f6';
   ctx.fillRect(0, 0, width, height);
 
-  const sun = ctx.createRadialGradient(width * 0.14, height * 0.14, 10, width * 0.14, height * 0.14, 160);
-  sun.addColorStop(0, 'rgba(255, 239, 148, 0.95)');
-  sun.addColorStop(1, 'rgba(255, 239, 148, 0)');
-  ctx.fillStyle = sun;
-  ctx.fillRect(0, 0, width, height);
-}
-
-function drawWaveTexture(ctx, width, height) {
   ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
   ctx.lineWidth = 2;
-
-  for (let index = 0; index < 12; index += 1) {
-    const y = height * (0.12 + index * 0.065);
+  for (let index = 0; index < 5; index += 1) {
+    const y = height * (0.16 + index * 0.18);
     ctx.beginPath();
-    for (let x = 0; x <= width; x += 24) {
-      const wave = Math.sin((x / width) * Math.PI * 4 + index) * 8;
+    for (let x = 0; x <= width; x += 26) {
+      const wave = Math.sin((x / width) * Math.PI * 4 + index) * 5;
       if (x === 0) {
         ctx.moveTo(x, y + wave);
       } else {
@@ -72,209 +53,198 @@ function drawWaveTexture(ctx, width, height) {
     }
     ctx.stroke();
   }
-
   ctx.restore();
 }
 
-function drawZoneBands(ctx, width, height) {
-  zoneOrder.forEach((zoneId, index) => {
-    const top = height * (0.08 + index * 0.22);
-    const bandHeight = height * 0.21;
-    const meta = getZoneMeta(zoneId);
-
-    ctx.save();
-    ctx.fillStyle = ZONE_COLORS[zoneId] ?? '#7fbde9';
-    ctx.globalAlpha = 0.24;
-    ctx.beginPath();
-    ctx.moveTo(width * 0.04, top);
-    ctx.quadraticCurveTo(width * 0.34, top - 28, width * 0.58, top + 10);
-    ctx.quadraticCurveTo(width * 0.84, top + 36, width * 0.96, top + 8);
-    ctx.lineTo(width * 0.96, top + bandHeight);
-    ctx.quadraticCurveTo(width * 0.66, top + bandHeight + 28, width * 0.38, top + bandHeight - 10);
-    ctx.quadraticCurveTo(width * 0.18, top + bandHeight - 32, width * 0.04, top + bandHeight + 8);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    ctx.fillStyle = 'rgba(16, 49, 89, 0.86)';
-    ctx.font = '800 24px "Trebuchet MS", "PingFang SC", sans-serif';
-    ctx.fillText(meta?.label ?? zoneId, width * 0.07, top + 34);
-    ctx.fillStyle = 'rgba(16, 49, 89, 0.65)';
-    ctx.font = '600 14px "Avenir Next", "PingFang SC", sans-serif';
-    ctx.fillText(meta?.objective ?? '', width * 0.07, top + 58);
-    ctx.restore();
-  });
-}
-
-function drawAdventureRoute(ctx, width, height) {
+function drawPalmTree(ctx, x, y, scale = 1) {
   ctx.save();
-  ctx.beginPath();
-  boardPath.forEach((cell, index) => {
-    const point = toCanvasPoint(cell, width, height);
-    if (index === 0) {
-      ctx.moveTo(point.x, point.y);
-      return;
-    }
-    ctx.lineTo(point.x, point.y);
-  });
-  ctx.strokeStyle = '#fff7d8';
-  ctx.lineWidth = 22;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-
-  ctx.beginPath();
-  boardPath.forEach((cell, index) => {
-    const point = toCanvasPoint(cell, width, height);
-    if (index === 0) {
-      ctx.moveTo(point.x, point.y);
-      return;
-    }
-    ctx.lineTo(point.x, point.y);
-  });
-  ctx.strokeStyle = '#ff8a61';
-  ctx.lineWidth = 6;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.setLineDash([10, 16]);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawLandmarkIsland(ctx, point, scale = 1) {
-  ctx.save();
-  ctx.translate(point.x, point.y + 18);
+  ctx.translate(x, y);
   ctx.scale(scale, scale);
-  ctx.fillStyle = '#fff2ab';
+
+  ctx.strokeStyle = '#6b4f28';
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#5cc98a';
-  ctx.beginPath();
-  ctx.moveTo(-2, -2);
-  ctx.quadraticCurveTo(-16, -28, -8, -34);
-  ctx.quadraticCurveTo(0, -20, -2, -2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(2, -2);
-  ctx.quadraticCurveTo(18, -26, 10, -32);
-  ctx.quadraticCurveTo(0, -18, 2, -2);
-  ctx.fill();
+  ctx.moveTo(0, 0);
+  ctx.quadraticCurveTo(-6, -26, 3, -58);
+  ctx.stroke();
+
+  ctx.fillStyle = '#50a34d';
+  [
+    [-28, -58, 0, -52, -8, -74],
+    [26, -54, 3, -52, 12, -78],
+    [-12, -48, 4, -52, -26, -88],
+    [11, -47, 3, -52, 32, -84],
+  ].forEach(([ax, ay, bx, by, cx, cy]) => {
+    ctx.beginPath();
+    ctx.moveTo(0, -54);
+    ctx.quadraticCurveTo(ax, ay, cx, cy);
+    ctx.quadraticCurveTo(bx, by, 0, -54);
+    ctx.fill();
+  });
+
   ctx.restore();
 }
 
-function drawRouteCells(ctx, width, height) {
-  boardPath.forEach((cell) => {
-    const point = toCanvasPoint(cell, width, height);
-    const isLandmark = cell.kind === 'landmark' || cell.kind === 'finish';
-    if (isLandmark) {
-      drawLandmarkIsland(ctx, point, cell.kind === 'finish' ? 1.1 : 0.86);
-    }
+function drawCenterIsland(ctx, width, height) {
+  const centerX = width * 0.53;
+  const centerY = height * 0.47;
 
+  ctx.save();
+  ctx.fillStyle = '#ecd28c';
+  ctx.beginPath();
+  ctx.ellipse(centerX, centerY + 40, 185, 92, -0.06, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#61b56a';
+  ctx.beginPath();
+  ctx.ellipse(centerX - 56, centerY + 8, 78, 38, -0.16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(centerX + 24, centerY - 4, 88, 44, 0.12, 0, Math.PI * 2);
+  ctx.fill();
+
+  drawPalmTree(ctx, centerX - 82, centerY + 42, 1);
+  drawPalmTree(ctx, centerX - 28, centerY + 48, 0.92);
+  drawPalmTree(ctx, centerX + 52, centerY + 42, 0.86);
+
+  ctx.fillStyle = '#f5d14e';
+  for (let index = 0; index < 18; index += 1) {
+    const angle = (Math.PI * 2 * index) / 18;
+    const radiusX = 82 + (index % 3) * 12;
+    const radiusY = 24 + (index % 2) * 16;
     ctx.beginPath();
-    ctx.fillStyle = isLandmark ? '#ffd86b' : '#ffffff';
-    ctx.arc(point.x, point.y, isLandmark ? 9 : 5, 0, Math.PI * 2);
+    ctx.arc(
+      centerX + Math.cos(angle) * radiusX,
+      centerY + 66 + Math.sin(angle) * radiusY,
+      7,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
-
-    if (isLandmark) {
-      ctx.fillStyle = '#16314a';
-      ctx.font = cell.kind === 'finish'
-        ? '900 16px "Trebuchet MS", sans-serif'
-        : '900 12px "Trebuchet MS", sans-serif';
-      ctx.fillText(cell.kind === 'finish' ? '★' : '✦', point.x - 5, point.y + 5);
-    }
-  });
-}
-
-function drawCurrentPositionHighlight(ctx, width, height, position) {
-  const cell = getCellMeta(position);
-  if (!cell) {
-    return;
   }
 
-  const point = toCanvasPoint(cell, width, height);
+  ctx.fillStyle = '#5a3518';
+  ctx.fillRect(centerX - 46, centerY + 4, 92, 58);
+  ctx.fillStyle = '#8d5c2e';
+  ctx.fillRect(centerX - 42, centerY + 10, 84, 48);
+  ctx.strokeStyle = '#2d1a0f';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(centerX - 42, centerY + 10, 84, 48);
+
+  ctx.fillStyle = '#392012';
   ctx.beginPath();
-  ctx.strokeStyle = '#fff3a6';
-  ctx.lineWidth = 5;
-  ctx.arc(point.x, point.y, 16, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.moveTo(centerX - 50, centerY + 8);
+  ctx.lineTo(centerX + 4, centerY - 34);
+  ctx.lineTo(centerX + 56, centerY - 4);
+  ctx.lineTo(centerX, centerY + 18);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#f4d04b';
+  ctx.fillRect(centerX - 7, centerY + 28, 14, 14);
+
+  ctx.restore();
 }
 
-function drawCrewMarkers(ctx, width, height, crew) {
-  crew.forEach((player, index) => {
-    const cell = getCellMeta(player.position ?? 1);
-    if (!cell) {
-      return;
-    }
-
-    const point = toCanvasPoint(cell, width, height);
-    const offsetX = (index % 3) * 10 - 10;
-    const offsetY = Math.floor(index / 3) * 10 - 10;
-    ctx.beginPath();
-    ctx.fillStyle = '#ffffff';
-    ctx.arc(point.x + offsetX, point.y + offsetY, 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.fillStyle = player.color ?? '#ff6b6b';
-    ctx.arc(point.x + offsetX, point.y + offsetY, 5.5, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-
-function renderBoardLabels(root, state = {}) {
-  const labelLayer = getOrCreateLayer(root, 'board-number-layer', 'board-number-layer');
-  const playerLayer = getOrCreateLayer(root, 'board-player-layer', 'board-player-layer');
+function renderBoardTiles(root, state = {}) {
+  const tileLayer = getOrCreateLayer(root, 'board-number-layer', 'board-number-layer');
   const currentPosition = state.currentPlayer?.position ?? 1;
-  const crew = Array.isArray(state.crew) ? state.crew : [];
 
-  Object.assign(labelLayer.style, {
+  Object.assign(tileLayer.style, {
     position: 'absolute',
     inset: '0',
     pointerEvents: 'none',
     zIndex: '2',
   });
 
-  Object.assign(playerLayer.style, {
-    position: 'absolute',
-    inset: '0',
-    pointerEvents: 'none',
-    zIndex: '3',
-  });
-
-  labelLayer.innerHTML = boardPath
+  tileLayer.innerHTML = boardPath
+    .filter(({ index }) => index !== 100)
     .map((cell) => {
       const isCurrent = cell.index === currentPosition;
-      const isLandmark = cell.kind === 'landmark' || cell.kind === 'finish';
-      const offsetY = isLandmark ? -22 : cell.index % 2 === 0 ? 16 : -16;
+      const isLandmark = cell.kind === 'landmark';
 
       return `
         <span
           class="board-cell-label ${isLandmark ? 'board-cell-label--landmark' : ''} ${isCurrent ? 'board-cell-label--current' : ''}"
           data-cell-label="${cell.index}"
-          style="left:${(cell.x * 100).toFixed(2)}%;top:calc(${(cell.y * 100).toFixed(2)}% + ${offsetY}px);"
+          style="left:${(cell.x * 100).toFixed(2)}%;top:${(cell.y * 100).toFixed(2)}%;--cell-rotation:${cell.rotation.toFixed(2)}deg;"
         >
           ${cell.index}
         </span>
       `;
     })
     .join('');
+}
+
+function renderBoardStickers(root) {
+  const stickerLayer = getOrCreateLayer(root, 'board-sticker-layer', 'board-sticker-layer');
+
+  Object.assign(stickerLayer.style, {
+    position: 'absolute',
+    inset: '0',
+    pointerEvents: 'none',
+    zIndex: '4',
+  });
+
+  stickerLayer.innerHTML = boardStickers
+    .map((sticker) => `
+      <div
+        class="board-sticker board-sticker--${sticker.style}"
+        data-board-sticker="${sticker.id}"
+        style="left:${(sticker.x * 100).toFixed(2)}%;top:${(sticker.y * 100).toFixed(2)}%;--sticker-rotation:${sticker.rotation}deg;"
+      >
+        <span class="board-sticker__title">${sticker.text}</span>
+        <span class="board-sticker__detail">${sticker.detail}</span>
+      </div>
+    `)
+    .join('');
+}
+
+function renderCenterSign(root) {
+  const centerLayer = getOrCreateLayer(root, 'board-center-layer', 'board-center-layer');
+
+  Object.assign(centerLayer.style, {
+    position: 'absolute',
+    inset: '0',
+    pointerEvents: 'none',
+    zIndex: '5',
+  });
+
+  centerLayer.innerHTML = `
+    <div class="board-center-sign" data-role="board-center-sign" data-cell-label="100">
+      <span class="board-center-sign__flag">终点</span>
+      <span class="board-center-sign__value">100</span>
+    </div>
+  `;
+}
+
+function renderPlayerChips(root, state = {}) {
+  const playerLayer = getOrCreateLayer(root, 'board-player-layer', 'board-player-layer');
+  const crew = Array.isArray(state.crew) ? state.crew : [];
+
+  Object.assign(playerLayer.style, {
+    position: 'absolute',
+    inset: '0',
+    pointerEvents: 'none',
+    zIndex: '6',
+  });
 
   playerLayer.innerHTML = crew
     .map((player, index) => {
       const cell = getCellMeta(player.position ?? 1);
-      if (!cell) {
+      if (!cell || cell.index === 100) {
         return '';
       }
 
-      const offsetX = index % 2 === 0 ? -20 : 20;
-      const offsetY = -38 - Math.floor(index / 2) * 18;
+      const stackColumn = index % 2 === 0 ? -14 : 14;
+      const stackRow = Math.floor(index / 2) * 14;
 
       return `
         <div
           class="board-player-chip"
           data-player-chip="${index + 1}"
-          style="left:calc(${(cell.x * 100).toFixed(2)}% + ${offsetX}px);top:calc(${(cell.y * 100).toFixed(2)}% + ${offsetY}px);--chip-color:${player.color ?? '#ff6b6b'};"
+          style="left:calc(${(cell.x * 100).toFixed(2)}% + ${stackColumn}px);top:calc(${(cell.y * 100).toFixed(2)}% - ${24 + stackRow}px);--chip-color:${player.color ?? '#ff6b6b'};"
           title="${index + 1}号 ${player.name}"
         >
           <span class="board-player-chip__badge">${index + 1}</span>
@@ -295,26 +265,24 @@ export function renderBoardRenderer(root, { state = {}, size = DEFAULT_SIZE } = 
   canvas.style.width = '100%';
   canvas.style.height = '100%';
   canvas.style.display = 'block';
-  canvas.style.borderRadius = '20px';
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
+    renderBoardTiles(root, state);
+    renderBoardStickers(root);
+    renderCenterSign(root);
+    renderPlayerChips(root, state);
     return canvas;
   }
 
-  drawSeaBackground(ctx, size.width, size.height);
-  drawWaveTexture(ctx, size.width, size.height);
-  drawZoneBands(ctx, size.width, size.height);
-  drawAdventureRoute(ctx, size.width, size.height);
-  drawRouteCells(ctx, size.width, size.height);
-  drawCurrentPositionHighlight(
-    ctx,
-    size.width,
-    size.height,
-    state.currentPlayer?.position ?? 1,
-  );
-  drawCrewMarkers(ctx, size.width, size.height, state.crew ?? []);
-  renderBoardLabels(root, state);
+  ctx.clearRect(0, 0, size.width, size.height);
+  drawBoardWater(ctx, size.width, size.height);
+  drawCenterIsland(ctx, size.width, size.height);
+
+  renderBoardTiles(root, state);
+  renderBoardStickers(root);
+  renderCenterSign(root);
+  renderPlayerChips(root, state);
 
   return canvas;
 }

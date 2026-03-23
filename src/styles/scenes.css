@@ -135,8 +135,7 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 18%),
-    radial-gradient(circle at 50% 48%, rgba(255, 241, 179, 0.16), transparent 22%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 18%);
   pointer-events: none;
 }
 

@@ -23,12 +23,13 @@
 }
 
 .game-layout {
-  width: min(1440px, 100%);
+  width: min(1240px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 220px;
+  grid-template-columns: minmax(0, 1fr) 170px;
   gap: clamp(0.75rem, 1.4vw, 1rem);
   align-items: start;
+  justify-content: center;
 }
 
 .scene-panel {
@@ -46,10 +47,13 @@
 
 .board-stage-shell {
   position: relative;
-  min-height: clamp(620px, 78vh, 900px);
+  width: min(100%, 82vh);
+  aspect-ratio: 1 / 1;
+  min-height: 0;
   border-radius: 32px;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
+  justify-self: center;
 }
 
 .hud-stage-shell {
@@ -87,7 +91,7 @@
   }
 
   .board-stage-shell {
-    min-height: clamp(420px, 56vh, 620px);
+    width: min(100%, 92vw);
   }
 }
 

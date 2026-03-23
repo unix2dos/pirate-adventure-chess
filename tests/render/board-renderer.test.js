@@ -13,6 +13,7 @@ describe('board renderer', () => {
       fill() {},
       arc() {},
       fillRect() {},
+      strokeRect() {},
       clearRect() {},
       createLinearGradient() {
         return { addColorStop() {} };
@@ -46,5 +47,7 @@ describe('board renderer', () => {
     expect(root.querySelector('[data-cell-label="100"]')).not.toBeNull();
     expect(root.querySelector('[data-player-chip="1"]')).not.toBeNull();
     expect(root.querySelector('[data-player-chip="2"]')).not.toBeNull();
+    expect(root.querySelector('[data-role="board-center-sign"]')).not.toBeNull();
+    expect(root.querySelectorAll('[data-board-sticker]').length).toBeGreaterThan(3);
   });
 });
