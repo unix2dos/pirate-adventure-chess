@@ -7,6 +7,7 @@ import { renderBoardRenderer } from '../render/board-renderer.js';
 import { renderAnimationLayer } from '../render/animation-layer.js';
 import { renderGameHud } from '../ui/game-hud.js';
 import { renderEventOverlay } from '../ui/event-overlay.js';
+import { renderWinScreen } from '../ui/win-screen.js';
 
 const PLAYER_COLORS = ['#ff6b6b', '#4ecdc4', '#ffd166', '#7a9cff'];
 
@@ -39,8 +40,31 @@ function createHudState(engineState, recentTitle = '准备出航') {
   };
 }
 
+function createRanking(engineState) {
+  return engineState.players
+    .map((player, index) => ({ ...player, index }))
+    .sort((left, right) => {
+      if (right.position !== left.position) {
+        return right.position - left.position;
+      }
+
+      return left.index - right.index;
+    })
+    .map(({ index, ...player }) => player);
+}
+
+function createWinPayload(engineState, onReplay) {
+  const ranking = createRanking(engineState);
+
+  return {
+    winner: ranking[0] ?? engineState.players[engineState.currentPlayerIndex],
+    ranking,
+    onReplay,
+  };
+}
+
 function renderGameScene(root, payload = {}) {
-  const { engine } = payload;
+  const { engine, onWin } = payload;
   let sceneState = payload.state ?? (engine ? createHudState(engine.getState()) : null);
 
   root.innerHTML = `
@@ -70,6 +94,11 @@ function renderGameScene(root, payload = {}) {
         event: pendingEvent,
         onResolve(choiceValue) {
           const nextEngineState = engine.resolvePendingEvent(choiceValue);
+          if (nextEngineState.gameOver && typeof onWin === 'function') {
+            onWin(nextEngineState);
+            return;
+          }
+
           sceneState = createHudState(nextEngineState);
           renderFrame();
         },
@@ -89,6 +118,11 @@ function renderGameScene(root, payload = {}) {
     rollButton.addEventListener('click', async () => {
       rollButton.disabled = true;
       const nextEngineState = await engine.takeTurn();
+      if (nextEngineState.gameOver && typeof onWin === 'function') {
+        onWin(nextEngineState);
+        return;
+      }
+
       sceneState = createHudState(
         nextEngineState,
         nextEngineState.gameOver ? '宝藏到手，冲线成功' : '海浪推着船队前进',
@@ -112,22 +146,32 @@ export function createApp(root) {
     renderGame(mount, payload) {
       renderGameScene(mount, payload);
     },
-  });
-
-  sceneManager.showStart({
-    onStart(config) {
-      const players = createInitialPlayers(config?.players ?? []);
-      const engine = createGameEngine({
-        players,
-        rollDice: async () => Math.floor(Math.random() * 6) + 1,
-      });
-
-      sceneManager.showGame({
-        engine,
-        state: createHudState(engine.getState(), '扬帆起航'),
-      });
+    renderWin(mount, payload) {
+      renderWinScreen(mount, payload);
     },
   });
+
+  function showStartScene() {
+    sceneManager.showStart({
+      onStart(config) {
+        const players = createInitialPlayers(config?.players ?? []);
+        const engine = createGameEngine({
+          players,
+          rollDice: async () => Math.floor(Math.random() * 6) + 1,
+        });
+
+        sceneManager.showGame({
+          engine,
+          state: createHudState(engine.getState(), '扬帆起航'),
+          onWin(engineState) {
+            sceneManager.showWin(createWinPayload(engineState, showStartScene));
+          },
+        });
+      },
+    });
+  }
+
+  showStartScene();
 
   return sceneManager;
 }
