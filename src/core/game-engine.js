@@ -18,6 +18,10 @@ export function createGameEngine({ players, rollDice }) {
   }
 
   async function takeTurn() {
+    if (state.gameOver) {
+      return getState();
+    }
+
     const player = state.players[state.currentPlayerIndex];
     if (player.skipTurns > 0) {
       player.skipTurns -= 1;

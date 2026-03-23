@@ -29,4 +29,23 @@ describe('game engine', () => {
     expect(engine.getState().players[0].position).toBe(10);
     expect(engine.getState().players[0].skipTurns).toBe(0);
   });
+
+  it('does not mutate state after the game is over', async () => {
+    let rollCount = 0;
+    const engine = createGameEngine({
+      players: [{ id: 0, name: 'A', position: 99, skipTurns: 0, turtleBuff: 0, isAI: false }],
+      rollDice: () => {
+        rollCount += 1;
+        return 1;
+      },
+    });
+
+    await engine.takeTurn();
+    const stateAfterWin = engine.getState();
+
+    await engine.takeTurn();
+
+    expect(engine.getState()).toEqual(stateAfterWin);
+    expect(rollCount).toBe(1);
+  });
 });
