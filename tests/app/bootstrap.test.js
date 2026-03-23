@@ -8,6 +8,7 @@ describe('createApp', () => {
 
     createApp(root);
 
+    expect(root.dataset.theme).toBe('pirate-party');
     expect(root.querySelector('[data-scene="start"]')).not.toBeNull();
     expect(root.querySelector('[data-role="start-adventure"]')).not.toBeNull();
   });
@@ -27,6 +28,7 @@ describe('bootstrap', () => {
 
     const root = document.getElementById('app');
 
+    expect(root.dataset.theme).toBe('pirate-party');
     expect(root.querySelector('[data-scene="start"]')).not.toBeNull();
     expect(root.querySelector('[data-role="start-adventure"]')).not.toBeNull();
   });

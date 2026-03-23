@@ -1,26 +1,37 @@
 export function renderWinScreen(root, { winner, ranking = [], onReplay }) {
   root.innerHTML = `
-    <section data-scene="win" style="min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box;background:linear-gradient(180deg,#8dd8ff 0%,#fff7cf 100%);">
-      <article style="width:min(560px,100%);background:#fffaf0;border-radius:28px;padding:28px;box-shadow:0 24px 48px rgba(13,31,67,0.18);text-align:center;">
-        <div style="font-size:56px;">🏆</div>
-        <p style="margin:0;color:#ff7b4a;font-weight:700;">宝藏争夺结果</p>
-        <h1 style="margin:8px 0 12px;font-size:clamp(2rem,5vw,3rem);color:#17325c;">${winner?.name ?? '小船长'} 找到宝藏啦！</h1>
-        <p style="margin:0 0 20px;color:#52627d;">船队穿过糖果海湾，终于第一个登上了闪光宝岛。</p>
-        <ol style="margin:0;padding:0;list-style:none;display:grid;gap:10px;">
+    <section data-scene="win" class="scene-shell win-scene">
+      <div class="scene-grid win-grid">
+        <div class="win-hero stack">
+          <span class="hero-badge">庆祝时刻 · Treasure Found</span>
+          <h1 class="display-title">${winner?.name ?? '小船长'} 找到宝藏啦！</h1>
+          <p class="support-copy">船队穿过糖果海湾、泡泡海峡和章鱼湾，终于第一个冲上闪光宝岛。现在可以再来一局，换个人当船长。</p>
+          <div class="confetti-strip" aria-hidden="true">
+            <span class="confetti-dot" style="--dot-color:var(--coral);"></span>
+            <span class="confetti-dot" style="--dot-color:var(--lemon);"></span>
+            <span class="confetti-dot" style="--dot-color:var(--mint);"></span>
+            <span class="confetti-dot" style="--dot-color:#69c4ff;"></span>
+            <span class="confetti-dot" style="--dot-color:#ff98bb;"></span>
+          </div>
+        </div>
+        <article class="scene-panel win-panel stack">
+          <span class="scene-caption">宝藏争夺结果</span>
+          <h2 class="panel-title">谁先冲上了终点岛？</h2>
+          <ol class="ranking-list">
           ${ranking.map((player, index) => `
-            <li style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:${index === 0 ? '#fff0c8' : '#eef6ff'};border-radius:18px;">
-              <span style="display:flex;align-items:center;gap:10px;color:#17325c;font-weight:700;">
-                <span style="width:32px;height:32px;border-radius:999px;background:${player.color ?? '#7a9cff'};display:inline-grid;place-items:center;color:#fff;">${index + 1}</span>
-                ${player.name}
+            <li class="ranking-item ${index === 0 ? 'ranking-item--winner' : ''}" style="--crew-color:${player.color ?? '#7a9cff'};">
+              <span class="ranking-item__left">
+                <span class="ranking-item__badge">${index + 1}</span>
+                <span class="ranking-item__name">${player.name}</span>
               </span>
-              <span style="color:#52627d;">航行到 ${player.position} 格</span>
+              <span class="ranking-item__meta">航行到 ${player.position} 格</span>
             </li>
           `).join('')}
-        </ol>
-        <button data-role="replay" type="button" style="margin-top:22px;border:none;border-radius:999px;padding:14px 24px;background:#ff7b4a;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;">
-          再玩一局
-        </button>
-      </article>
+          </ol>
+          <button class="action-button action-button--primary" data-role="replay" type="button">再玩一局</button>
+          <p class="helper-text">重开后会回到开局页，你可以换人数、换名字，或者把其他船员改成 AI。</p>
+        </article>
+      </div>
     </section>
   `;
 

@@ -1,11 +1,11 @@
-import { boardPath, getCellMeta, zoneOrder } from '../core/board-data.js';
+import { boardPath, getCellMeta, getZoneMeta, zoneOrder } from '../core/board-data.js';
 
 const DEFAULT_SIZE = { width: 960, height: 640 };
 const ZONE_COLORS = {
-  'sunny-bay': '#8ed7ff',
-  'bubble-strait': '#98f2d6',
-  'octopus-cove': '#7fc2ff',
-  'treasure-run': '#ffe083',
+  'sunny-bay': '#95dcff',
+  'bubble-strait': '#96f0cf',
+  'octopus-cove': '#7eafff',
+  'treasure-run': '#ffd96f',
 };
 
 function getOrCreateCanvas(root) {
@@ -13,6 +13,7 @@ function getOrCreateCanvas(root) {
   if (!canvas) {
     canvas = document.createElement('canvas');
     canvas.dataset.role = 'board-canvas';
+    canvas.className = 'board-canvas';
     root.appendChild(canvas);
   }
 
@@ -28,23 +29,73 @@ function toCanvasPoint(cell, width, height) {
 
 function drawSeaBackground(ctx, width, height) {
   const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, '#7bd6ff');
-  gradient.addColorStop(1, '#0d5cab');
+  gradient.addColorStop(0, '#9de4ff');
+  gradient.addColorStop(0.4, '#4cc5f4');
+  gradient.addColorStop(1, '#1566b9');
   ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  const sun = ctx.createRadialGradient(width * 0.14, height * 0.14, 10, width * 0.14, height * 0.14, 160);
+  sun.addColorStop(0, 'rgba(255, 239, 148, 0.95)');
+  sun.addColorStop(1, 'rgba(255, 239, 148, 0)');
+  ctx.fillStyle = sun;
   ctx.fillRect(0, 0, width, height);
 }
 
+function drawWaveTexture(ctx, width, height) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 2;
+
+  for (let index = 0; index < 12; index += 1) {
+    const y = height * (0.12 + index * 0.065);
+    ctx.beginPath();
+    for (let x = 0; x <= width; x += 24) {
+      const wave = Math.sin((x / width) * Math.PI * 4 + index) * 8;
+      if (x === 0) {
+        ctx.moveTo(x, y + wave);
+      } else {
+        ctx.lineTo(x, y + wave);
+      }
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 function drawZoneBands(ctx, width, height) {
-  const bandHeight = height / zoneOrder.length;
   zoneOrder.forEach((zoneId, index) => {
+    const top = height * (0.08 + index * 0.22);
+    const bandHeight = height * 0.21;
+    const meta = getZoneMeta(zoneId);
+
+    ctx.save();
     ctx.fillStyle = ZONE_COLORS[zoneId] ?? '#7fbde9';
     ctx.globalAlpha = 0.24;
-    ctx.fillRect(0, index * bandHeight, width, bandHeight);
+    ctx.beginPath();
+    ctx.moveTo(width * 0.04, top);
+    ctx.quadraticCurveTo(width * 0.34, top - 28, width * 0.58, top + 10);
+    ctx.quadraticCurveTo(width * 0.84, top + 36, width * 0.96, top + 8);
+    ctx.lineTo(width * 0.96, top + bandHeight);
+    ctx.quadraticCurveTo(width * 0.66, top + bandHeight + 28, width * 0.38, top + bandHeight - 10);
+    ctx.quadraticCurveTo(width * 0.18, top + bandHeight - 32, width * 0.04, top + bandHeight + 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = 'rgba(16, 49, 89, 0.86)';
+    ctx.font = '800 24px "Trebuchet MS", "PingFang SC", sans-serif';
+    ctx.fillText(meta?.label ?? zoneId, width * 0.07, top + 34);
+    ctx.fillStyle = 'rgba(16, 49, 89, 0.65)';
+    ctx.font = '600 14px "Avenir Next", "PingFang SC", sans-serif';
+    ctx.fillText(meta?.objective ?? '', width * 0.07, top + 58);
+    ctx.restore();
   });
-  ctx.globalAlpha = 1;
 }
 
 function drawAdventureRoute(ctx, width, height) {
+  ctx.save();
   ctx.beginPath();
   boardPath.forEach((cell, index) => {
     const point = toCanvasPoint(cell, width, height);
@@ -54,8 +105,8 @@ function drawAdventureRoute(ctx, width, height) {
     }
     ctx.lineTo(point.x, point.y);
   });
-  ctx.strokeStyle = '#fff6cf';
-  ctx.lineWidth = 18;
+  ctx.strokeStyle = '#fff7d8';
+  ctx.lineWidth = 22;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.stroke();
@@ -69,21 +120,57 @@ function drawAdventureRoute(ctx, width, height) {
     }
     ctx.lineTo(point.x, point.y);
   });
-  ctx.strokeStyle = '#ff8f63';
+  ctx.strokeStyle = '#ff8a61';
   ctx.lineWidth = 6;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  ctx.setLineDash([10, 16]);
   ctx.stroke();
+  ctx.restore();
+}
+
+function drawLandmarkIsland(ctx, point, scale = 1) {
+  ctx.save();
+  ctx.translate(point.x, point.y + 18);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#fff2ab';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#5cc98a';
+  ctx.beginPath();
+  ctx.moveTo(-2, -2);
+  ctx.quadraticCurveTo(-16, -28, -8, -34);
+  ctx.quadraticCurveTo(0, -20, -2, -2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(2, -2);
+  ctx.quadraticCurveTo(18, -26, 10, -32);
+  ctx.quadraticCurveTo(0, -18, 2, -2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawRouteCells(ctx, width, height) {
   boardPath.forEach((cell) => {
     const point = toCanvasPoint(cell, width, height);
     const isLandmark = cell.kind === 'landmark' || cell.kind === 'finish';
+    if (isLandmark) {
+      drawLandmarkIsland(ctx, point, cell.kind === 'finish' ? 1.1 : 0.86);
+    }
+
     ctx.beginPath();
-    ctx.fillStyle = isLandmark ? '#ffcf5a' : '#ffffff';
-    ctx.arc(point.x, point.y, isLandmark ? 7 : 4, 0, Math.PI * 2);
+    ctx.fillStyle = isLandmark ? '#ffd86b' : '#ffffff';
+    ctx.arc(point.x, point.y, isLandmark ? 9 : 5, 0, Math.PI * 2);
     ctx.fill();
+
+    if (isLandmark) {
+      ctx.fillStyle = '#16314a';
+      ctx.font = cell.kind === 'finish'
+        ? '900 16px "Trebuchet MS", sans-serif'
+        : '900 12px "Trebuchet MS", sans-serif';
+      ctx.fillText(cell.kind === 'finish' ? '★' : '✦', point.x - 5, point.y + 5);
+    }
   });
 }
 
@@ -95,9 +182,9 @@ function drawCurrentPositionHighlight(ctx, width, height, position) {
 
   const point = toCanvasPoint(cell, width, height);
   ctx.beginPath();
-  ctx.strokeStyle = '#ffe96c';
+  ctx.strokeStyle = '#fff3a6';
   ctx.lineWidth = 5;
-  ctx.arc(point.x, point.y, 14, 0, Math.PI * 2);
+  ctx.arc(point.x, point.y, 16, 0, Math.PI * 2);
   ctx.stroke();
 }
 
@@ -112,8 +199,13 @@ function drawCrewMarkers(ctx, width, height, crew) {
     const offsetX = (index % 3) * 10 - 10;
     const offsetY = Math.floor(index / 3) * 10 - 10;
     ctx.beginPath();
+    ctx.fillStyle = '#ffffff';
+    ctx.arc(point.x + offsetX, point.y + offsetY, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
     ctx.fillStyle = player.color ?? '#ff6b6b';
-    ctx.arc(point.x + offsetX, point.y + offsetY, 5, 0, Math.PI * 2);
+    ctx.arc(point.x + offsetX, point.y + offsetY, 5.5, 0, Math.PI * 2);
     ctx.fill();
   });
 }
@@ -133,6 +225,7 @@ export function renderBoardRenderer(root, { state = {}, size = DEFAULT_SIZE } = 
   }
 
   drawSeaBackground(ctx, size.width, size.height);
+  drawWaveTexture(ctx, size.width, size.height);
   drawZoneBands(ctx, size.width, size.height);
   drawAdventureRoute(ctx, size.width, size.height);
   drawRouteCells(ctx, size.width, size.height);

@@ -1,0 +1,60 @@
+@keyframes floatBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes softPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--coral) 20%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 0 16px color-mix(in oklab, var(--coral) 0%, transparent);
+  }
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.scene-panel,
+.board-stage-shell,
+.overlay-card {
+  animation: riseIn 420ms ease-out;
+}
+
+.map-showcase__sun,
+.overlay-badge,
+.ranking-item--winner .ranking-item__badge {
+  animation: floatBob 4.8s ease-in-out infinite;
+}
+
+.action-button--primary,
+.count-option[data-active='true'] {
+  animation: softPulse 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

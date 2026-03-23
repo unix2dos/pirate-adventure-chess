@@ -68,10 +68,12 @@ function renderGameScene(root, payload = {}) {
   let sceneState = payload.state ?? (engine ? createHudState(engine.getState()) : null);
 
   root.innerHTML = `
-    <section data-scene="game" style="position:relative;display:flex;gap:18px;align-items:stretch;min-height:640px;padding:12px;box-sizing:border-box;">
-      <div data-role="board-stage" style="position:relative;flex:1;background:#d7f0ff;border-radius:20px;overflow:hidden;min-height:640px;"></div>
-      <div data-role="hud-stage" style="width:320px;display:flex;flex-direction:column;"></div>
-      <div data-role="event-overlay-stage" style="position:absolute;inset:0;"></div>
+    <section data-scene="game" class="scene-shell game-scene">
+      <div class="game-layout">
+        <div data-role="board-stage" class="board-stage-shell"></div>
+        <div data-role="hud-stage" class="hud-stage-shell"></div>
+      </div>
+      <div data-role="event-overlay-stage" class="overlay-layer"></div>
     </section>
   `;
 
@@ -138,6 +140,8 @@ export function createApp(root) {
   if (!root) {
     throw new Error('createApp requires a mount element with id="app".');
   }
+
+  root.dataset.theme = 'pirate-party';
 
   const sceneManager = createSceneManager(root, {
     renderStart(mount, { onStart }) {
