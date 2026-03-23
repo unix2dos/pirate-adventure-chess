@@ -278,6 +278,9 @@ function drawCenterIsland(ctx, width, height) {
 function renderBoardTiles(root, state = {}) {
   const tileLayer = getOrCreateLayer(root, 'board-number-layer', 'board-number-layer');
   const currentPosition = state.currentPlayer?.position ?? 1;
+  const trailSet = new Set((state.animation?.trail ?? []).map((step) => String(step)));
+  const activeCell = state.animation?.activeCell ?? currentPosition;
+  const landedCell = state.animation?.landedCell ?? null;
 
   Object.assign(tileLayer.style, {
     position: 'absolute',
@@ -291,11 +294,17 @@ function renderBoardTiles(root, state = {}) {
     .map((cell) => {
       const isCurrent = cell.index === currentPosition;
       const isLandmark = cell.kind === 'landmark';
+      const isTrail = trailSet.has(String(cell.index));
+      const isActive = cell.index === activeCell;
+      const isLanded = cell.index === landedCell;
 
       return `
         <span
-          class="board-cell-label ${isLandmark ? 'board-cell-label--landmark' : ''} ${isCurrent ? 'board-cell-label--current' : ''}"
+          class="board-cell-label ${isLandmark ? 'board-cell-label--landmark' : ''} ${isCurrent ? 'board-cell-label--current' : ''} ${isTrail ? 'board-cell-label--trail' : ''} ${isActive ? 'board-cell-label--active' : ''} ${isLanded ? 'board-cell-label--landed' : ''}"
           data-cell-label="${cell.index}"
+          data-trail="${isTrail}"
+          data-active="${isActive}"
+          data-landed="${isLanded}"
           style="left:${(cell.x * 100).toFixed(2)}%;top:${(cell.y * 100).toFixed(2)}%;--cell-rotation:${cell.rotation.toFixed(2)}deg;"
         >
           ${cell.index}
@@ -357,6 +366,8 @@ function renderCenterSign(root) {
 function renderPlayerChips(root, state = {}) {
   const playerLayer = getOrCreateLayer(root, 'board-player-layer', 'board-player-layer');
   const crew = Array.isArray(state.crew) ? state.crew : [];
+  const motionPlayerId = state.animation?.playerId ?? null;
+  const motionPhase = state.animation?.phase ?? 'idle';
 
   Object.assign(playerLayer.style, {
     position: 'absolute',
@@ -374,11 +385,13 @@ function renderPlayerChips(root, state = {}) {
 
       const stackColumn = index % 2 === 0 ? -14 : 14;
       const stackRow = Math.floor(index / 2) * 14;
+      const playerMotion = player.id === motionPlayerId ? motionPhase : '';
 
       return `
         <div
-          class="board-player-chip"
+          class="board-player-chip ${playerMotion ? `board-player-chip--${playerMotion}` : ''}"
           data-player-chip="${index + 1}"
+          data-motion="${playerMotion}"
           style="left:calc(${(cell.x * 100).toFixed(2)}% + ${stackColumn}px);top:calc(${(cell.y * 100).toFixed(2)}% - ${24 + stackRow}px);--chip-color:${player.color ?? '#ff6b6b'};"
           title="${index + 1}号 ${player.name}"
         >

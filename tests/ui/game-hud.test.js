@@ -35,4 +35,31 @@ describe('game HUD', () => {
     expect(root.querySelector('[data-role="zone-objective-card"]')).toBeNull();
     expect(root.querySelector('[data-role="crew-strip"]')).toBeNull();
   });
+
+  it('shows a rolling dice state with the live face value while a turn animation is playing', () => {
+    const root = document.createElement('div');
+
+    renderGameHud(root, {
+      state: {
+        turnNumber: 2,
+        currentPlayer: { id: 'crew-1', name: '小船长', color: '#ff6b6b', position: 11 },
+        crew: [
+          { id: 'crew-1', name: '小船长', color: '#ff6b6b', position: 11 },
+          { id: 'crew-2', name: '海盗甲', color: '#4ecdc4', position: 8 },
+        ],
+        recentEvent: { title: '海浪推着船队前进' },
+        animation: {
+          phase: 'rolling',
+          diceValue: 5,
+          rollValue: 4,
+        },
+      },
+    });
+
+    const rollButton = root.querySelector('[data-role="roll-action"]');
+
+    expect(rollButton?.dataset.motion).toBe('rolling');
+    expect(rollButton?.textContent).toContain('摇骰中');
+    expect(rollButton?.textContent).toContain('5');
+  });
 });

@@ -39,6 +39,13 @@ describe('board renderer', () => {
           { id: 'crew-1', position: 7, color: '#ff6b6b', name: '你' },
           { id: 'crew-2', position: 12, color: '#4ecdc4', name: '海盗1' },
         ],
+        animation: {
+          phase: 'moving',
+          playerId: 'crew-1',
+          trail: [8, 9, 10, 11],
+          activeCell: 11,
+          landedCell: 11,
+        },
       },
     });
 
@@ -58,6 +65,10 @@ describe('board renderer', () => {
     expect(root.querySelector('[data-player-chip="1"] .board-player-chip__shadow')).not.toBeNull();
     expect(root.querySelector('[data-board-sticker="wish-star"] .board-sticker__icon')).not.toBeNull();
     expect(root.querySelector('[data-board-sticker="bonus-roll"] .board-sticker__icon')).not.toBeNull();
+    expect(root.querySelector('[data-cell-label="8"]')?.dataset.trail).toBe('true');
+    expect(root.querySelector('[data-cell-label="11"]')?.dataset.active).toBe('true');
+    expect(root.querySelector('[data-cell-label="11"]')?.dataset.landed).toBe('true');
+    expect(root.querySelector('[data-player-chip="1"]')?.dataset.motion).toBe('moving');
     expect(root.querySelectorAll('[data-board-sticker]').length).toBeGreaterThan(3);
   });
 });

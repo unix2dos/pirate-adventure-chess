@@ -434,6 +434,7 @@
     0 16px 28px rgba(87, 45, 17, 0.22),
     inset 0 -4px 0 rgba(0, 0, 0, 0.12);
   pointer-events: auto;
+  transform-origin: center;
 }
 
 .dice-fab__icon {
@@ -445,6 +446,33 @@
   font-size: 0.95rem;
   font-weight: 900;
   letter-spacing: 0.02em;
+}
+
+.dice-fab__value {
+  min-width: 1.7rem;
+  height: 1.7rem;
+  display: grid;
+  place-items: center;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  font-size: 0.96rem;
+  font-weight: 900;
+}
+
+.dice-fab[data-motion='rolling'] {
+  box-shadow:
+    0 22px 34px rgba(255, 132, 89, 0.32),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+}
+
+.dice-fab[data-motion='moving'],
+.dice-fab[data-motion='landing'],
+.dice-fab[data-motion='result'] {
+  box-shadow:
+    0 18px 32px rgba(255, 196, 80, 0.28),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.12);
 }
 
 @media (max-width: 640px) {
@@ -579,6 +607,10 @@
   font-size: 0.9rem;
   font-weight: 900;
   line-height: 1;
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 180ms ease;
   box-shadow:
     inset 0 2px 0 rgba(255, 255, 255, 0.7),
     inset 0 -2px 0 rgba(206, 144, 61, 0.24),
@@ -600,6 +632,25 @@
     0 10px 18px rgba(204, 94, 49, 0.32);
 }
 
+.board-cell-label--trail {
+  background: linear-gradient(180deg, #fff6c2 0%, #ffe592 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -2px 0 rgba(206, 144, 61, 0.18),
+    0 10px 20px rgba(255, 214, 120, 0.28);
+}
+
+.board-cell-label--active {
+  transform: translate(-50%, -56%) rotate(var(--cell-rotation, 0deg)) scale(1.12);
+  filter: saturate(1.08);
+}
+
+.board-cell-label--landed {
+  background: linear-gradient(180deg, #ffd3a2 0%, #ff9f68 100%);
+  border-color: rgba(188, 88, 42, 0.7);
+  color: white;
+}
+
 .board-player-chip {
   position: absolute;
   display: inline-grid;
@@ -609,6 +660,7 @@
   height: 2.2rem;
   border-radius: 999px;
   isolation: isolate;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), filter 180ms ease;
 }
 
 .board-player-chip__shadow {
@@ -647,6 +699,21 @@
     inset 0 2px 0 rgba(255, 255, 255, 0.26),
     inset 0 -3px 0 rgba(0, 0, 0, 0.16);
   z-index: 2;
+}
+
+.board-player-chip--rolling {
+  transform: translate(-50%, -56%) scale(1.03);
+  filter: saturate(1.08);
+}
+
+.board-player-chip--moving {
+  filter: saturate(1.12);
+}
+
+.board-player-chip--landing,
+.board-player-chip--result {
+  transform: translate(-50%, -54%) scale(1.08);
+  filter: saturate(1.12);
 }
 
 .board-sticker {

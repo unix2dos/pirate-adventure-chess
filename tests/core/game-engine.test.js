@@ -48,4 +48,23 @@ describe('game engine', () => {
     expect(engine.getState()).toEqual(stateAfterWin);
     expect(rollCount).toBe(1);
   });
+
+  it('returns a turn summary with roll result and traversed cells for board animations', async () => {
+    const engine = createGameEngine({
+      players: [{ id: 'crew-1', name: 'A', position: 7, skipTurns: 0, turtleBuff: 0, isAI: false }],
+      rollDice: () => 4,
+    });
+
+    const nextState = await engine.takeTurn();
+
+    expect(nextState.lastAction).toMatchObject({
+      type: 'move',
+      playerId: 'crew-1',
+      roll: 4,
+      moveBy: 4,
+      from: 7,
+      to: 11,
+      trail: [8, 9, 10, 11],
+    });
+  });
 });

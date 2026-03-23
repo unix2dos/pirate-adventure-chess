@@ -10,6 +10,37 @@ import { renderEventOverlay } from '../ui/event-overlay.js';
 import { renderWinScreen } from '../ui/win-screen.js';
 
 const PLAYER_COLORS = ['#ff6b6b', '#4ecdc4', '#ffd166', '#7a9cff'];
+const TURN_ANIMATION_MS = {
+  rollStep: 84,
+  moveStep: 180,
+  landingPause: 320,
+  settlePause: 220,
+  skipPause: 280,
+};
+
+function hasOwnOverride(overrides, key) {
+  return Object.prototype.hasOwnProperty.call(overrides, key);
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    globalThis.setTimeout(resolve, ms);
+  });
+}
+
+function buildDiceSequence(finalValue) {
+  const cycle = [1, 5, 2, 6, 3, 4];
+  const normalized = Math.min(6, Math.max(1, Number(finalValue) || 1));
+  const startIndex = cycle.indexOf(normalized);
+  const sequence = [];
+
+  for (let index = 0; index < 6; index += 1) {
+    sequence.push(cycle[(startIndex + index + 1) % cycle.length]);
+  }
+
+  sequence.push(normalized);
+  return sequence;
+}
 
 function createInitialPlayers(playerConfigs = []) {
   const safeConfigs = playerConfigs.length > 0
@@ -24,19 +55,25 @@ function createInitialPlayers(playerConfigs = []) {
   }));
 }
 
-function createHudState(engineState, recentTitle = '准备出航') {
-  const currentPlayer = engineState.players[engineState.currentPlayerIndex] ?? engineState.players[0];
+function createHudState(engineState, recentTitle = '准备出航', overrides = {}) {
+  const crew = hasOwnOverride(overrides, 'crew') ? overrides.crew : engineState.players;
+  const currentPlayer = hasOwnOverride(overrides, 'currentPlayer')
+    ? overrides.currentPlayer
+    : crew[engineState.currentPlayerIndex] ?? crew[0];
   const cellMeta = getCellMeta(currentPlayer?.position ?? 1);
 
   return {
-    turnNumber: engineState.turnNumber,
+    turnNumber: hasOwnOverride(overrides, 'turnNumber') ? overrides.turnNumber : engineState.turnNumber,
     currentPlayer,
     currentZoneLabel: cellMeta?.zoneLabel ?? '晴空湾',
     currentObjective: cellMeta?.objective ?? '朝宝藏终点冲刺',
-    recentEvent: engineState.recentEvent ?? { title: recentTitle },
-    crew: engineState.players,
-    gameOver: engineState.gameOver,
-    pendingEvent: engineState.pendingEvent,
+    recentEvent: hasOwnOverride(overrides, 'recentEvent')
+      ? overrides.recentEvent
+      : engineState.recentEvent ?? { title: recentTitle },
+    crew,
+    gameOver: hasOwnOverride(overrides, 'gameOver') ? overrides.gameOver : engineState.gameOver,
+    pendingEvent: hasOwnOverride(overrides, 'pendingEvent') ? overrides.pendingEvent : engineState.pendingEvent,
+    animation: hasOwnOverride(overrides, 'animation') ? overrides.animation : null,
   };
 }
 
@@ -66,6 +103,7 @@ function createWinPayload(engineState, onReplay) {
 function renderGameScene(root, payload = {}) {
   const { engine, onWin } = payload;
   let sceneState = payload.state ?? (engine ? createHudState(engine.getState()) : null);
+  let isAnimatingTurn = false;
 
   root.innerHTML = `
     <section data-scene="game" class="scene-shell game-scene">
@@ -81,6 +119,138 @@ function renderGameScene(root, payload = {}) {
   const boardStage = root.querySelector('[data-role="board-stage"]');
   const hudStage = root.querySelector('[data-role="hud-stage"]');
   const overlayStage = root.querySelector('[data-role="event-overlay-stage"]');
+
+  async function playTurnSequence(turnStartState, nextEngineState) {
+    const action = nextEngineState.lastAction;
+    if (!action) {
+      sceneState = createHudState(nextEngineState);
+      renderFrame();
+      if (nextEngineState.gameOver && typeof onWin === 'function') {
+        onWin(nextEngineState);
+      }
+      return;
+    }
+
+    const displayCrew = structuredClone(turnStartState.players);
+    const displayPlayer = displayCrew.find(({ id }) => id === action.playerId)
+      ?? displayCrew[turnStartState.currentPlayerIndex]
+      ?? displayCrew[0];
+
+    if (action.type === 'skip') {
+      sceneState = createHudState(turnStartState, '这一回合先休息一下', {
+        crew: displayCrew,
+        currentPlayer: displayPlayer,
+        pendingEvent: null,
+        gameOver: false,
+        recentEvent: { title: `${displayPlayer.name} 这回合暂停一下` },
+        animation: {
+          phase: 'skip',
+          playerId: action.playerId,
+          activeCell: action.to,
+          landedCell: action.to,
+          trail: [],
+        },
+      });
+      renderFrame();
+      await wait(TURN_ANIMATION_MS.skipPause);
+      sceneState = createHudState(nextEngineState);
+      renderFrame();
+      return;
+    }
+
+    for (const face of buildDiceSequence(action.roll)) {
+      sceneState = createHudState(turnStartState, '骰子正在空中翻滚', {
+        crew: displayCrew,
+        currentPlayer: displayPlayer,
+        pendingEvent: null,
+        gameOver: false,
+        recentEvent: { title: `${displayPlayer.name} 正在摇骰子…` },
+        animation: {
+          phase: 'rolling',
+          playerId: action.playerId,
+          diceValue: face,
+          rollValue: action.roll,
+          activeCell: action.from,
+          trail: [],
+        },
+      });
+      renderFrame();
+      await wait(TURN_ANIMATION_MS.rollStep);
+    }
+
+    const trail = [];
+    for (const step of action.trail ?? []) {
+      displayPlayer.position = step;
+      trail.push(step);
+      sceneState = createHudState(turnStartState, '航线亮起来了', {
+        crew: displayCrew,
+        currentPlayer: displayPlayer,
+        pendingEvent: null,
+        gameOver: false,
+        recentEvent: { title: `${displayPlayer.name} 前进 ${trail.length} / ${action.trail.length} 格` },
+        animation: {
+          phase: 'moving',
+          playerId: action.playerId,
+          diceValue: action.roll,
+          rollValue: action.roll,
+          activeCell: step,
+          trail: [...trail],
+        },
+      });
+      renderFrame();
+      await wait(TURN_ANIMATION_MS.moveStep);
+    }
+
+    sceneState = createHudState(nextEngineState, nextEngineState.recentEvent?.title ?? '顺利停稳', {
+      crew: displayCrew,
+      currentPlayer: displayPlayer,
+      pendingEvent: null,
+      gameOver: false,
+      recentEvent: nextEngineState.pendingEvent
+        ? { title: `掷出 ${action.roll} 点，落在 ${nextEngineState.pendingEvent.event.title}` }
+        : nextEngineState.recentEvent ?? { title: `掷出 ${action.roll} 点，顺利停稳` },
+      animation: {
+        phase: 'landing',
+        playerId: action.playerId,
+        diceValue: action.roll,
+        rollValue: action.roll,
+        activeCell: action.to,
+        landedCell: action.to,
+        trail: action.trail ?? [],
+      },
+    });
+    renderFrame();
+    await wait(TURN_ANIMATION_MS.landingPause);
+
+    if (nextEngineState.gameOver && typeof onWin === 'function') {
+      onWin(nextEngineState);
+      return;
+    }
+
+    sceneState = createHudState(nextEngineState, nextEngineState.recentEvent?.title ?? '海浪推着船队前进', {
+      animation: {
+        phase: 'result',
+        playerId: action.playerId,
+        diceValue: action.roll,
+        rollValue: action.roll,
+        activeCell: action.to,
+        landedCell: action.to,
+        trail: action.trail ?? [],
+      },
+    });
+    renderFrame();
+
+    if (nextEngineState.pendingEvent) {
+      return;
+    }
+
+    await wait(TURN_ANIMATION_MS.settlePause);
+    sceneState = createHudState(
+      nextEngineState,
+      nextEngineState.gameOver ? '宝藏到手，冲线成功' : '海浪推着船队前进',
+    );
+    renderFrame();
+  }
 
   function renderFrame() {
     if (!sceneState) {
@@ -111,27 +281,27 @@ function renderGameScene(root, payload = {}) {
     }
 
     const rollButton = hudStage.querySelector('[data-role="roll-action"]');
-    if (!rollButton || !engine || sceneState.gameOver || pendingEvent) {
+    const isMotionPhase = Boolean(sceneState.animation?.phase && sceneState.animation.phase !== 'idle');
+    if (!rollButton || !engine || sceneState.gameOver || pendingEvent || isAnimatingTurn || isMotionPhase) {
       if (rollButton) {
-        rollButton.disabled = Boolean(sceneState.gameOver || pendingEvent);
+        rollButton.disabled = Boolean(sceneState.gameOver || pendingEvent || isAnimatingTurn || isMotionPhase);
       }
       return;
     }
 
+    rollButton.disabled = false;
+
     rollButton.addEventListener('click', async () => {
       rollButton.disabled = true;
+      isAnimatingTurn = true;
+      const turnStartState = engine.getState();
       const nextEngineState = await engine.takeTurn();
-      if (nextEngineState.gameOver && typeof onWin === 'function') {
-        onWin(nextEngineState);
-        return;
+      await playTurnSequence(turnStartState, nextEngineState);
+      isAnimatingTurn = false;
+      if (sceneState && !sceneState.gameOver && !sceneState.pendingEvent) {
+        renderFrame();
       }
-
-      sceneState = createHudState(
-        nextEngineState,
-        nextEngineState.gameOver ? '宝藏到手，冲线成功' : '海浪推着船队前进',
-      );
-      renderFrame();
-    });
+    }, { once: true });
   }
 
   renderFrame();
