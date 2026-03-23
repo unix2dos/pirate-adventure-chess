@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderBoardRenderer } from '../../src/render/board-renderer.js';
 
 describe('board renderer', () => {
-  it('renders visible board numbers and numbered player chips', () => {
+  it('renders visible board numbers on a widescreen board with numbered player chips', () => {
     const root = document.createElement('div');
     root.style.position = 'relative';
     HTMLCanvasElement.prototype.getContext = () => ({
@@ -42,6 +42,10 @@ describe('board renderer', () => {
       },
     });
 
+    const canvas = root.querySelector('[data-role="board-canvas"]');
+
+    expect(canvas?.width).toBe(1440);
+    expect(canvas?.height).toBe(900);
     expect(root.querySelector('[data-cell-label="1"]')).not.toBeNull();
     expect(root.querySelector('[data-cell-label="12"]')).not.toBeNull();
     expect(root.querySelector('[data-cell-label="100"]')).not.toBeNull();

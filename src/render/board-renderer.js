@@ -1,6 +1,6 @@
 import { boardPath, boardStickers, getCellMeta } from '../core/board-data.js';
 
-const DEFAULT_SIZE = { width: 940, height: 940 };
+const DEFAULT_SIZE = { width: 1440, height: 900 };
 
 function getOrCreateCanvas(root) {
   let canvas = root.querySelector('[data-role="board-canvas"]');
@@ -26,25 +26,22 @@ function getOrCreateLayer(root, role, className) {
   return layer;
 }
 
-function toCanvasPoint(cell, width, height) {
-  return {
-    x: cell.x * width,
-    y: cell.y * height,
-  };
-}
-
 function drawBoardWater(ctx, width, height) {
-  ctx.fillStyle = '#8fd6f6';
+  const seaGradient = ctx.createLinearGradient(0, 0, 0, height);
+  seaGradient.addColorStop(0, '#7fc4ef');
+  seaGradient.addColorStop(0.42, '#7bc1ee');
+  seaGradient.addColorStop(1, '#96d6f7');
+  ctx.fillStyle = seaGradient;
   ctx.fillRect(0, 0, width, height);
 
   ctx.save();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-  ctx.lineWidth = 2;
-  for (let index = 0; index < 5; index += 1) {
-    const y = height * (0.16 + index * 0.18);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.11)';
+  ctx.lineWidth = 2.4;
+  for (let index = 0; index < 6; index += 1) {
+    const y = height * (0.14 + index * 0.14);
     ctx.beginPath();
-    for (let x = 0; x <= width; x += 26) {
-      const wave = Math.sin((x / width) * Math.PI * 4 + index) * 5;
+    for (let x = 0; x <= width; x += 30) {
+      const wave = Math.sin((x / width) * Math.PI * 4 + index * 0.65) * 6;
       if (x === 0) {
         ctx.moveTo(x, y + wave);
       } else {
@@ -53,6 +50,54 @@ function drawBoardWater(ctx, width, height) {
     }
     ctx.stroke();
   }
+  ctx.restore();
+
+  ctx.save();
+  const glow = ctx.createRadialGradient(width * 0.52, height * 0.52, 70, width * 0.52, height * 0.52, width * 0.58);
+  glow.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+  glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+}
+
+function drawRouteGuideline(ctx, width, height) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([12, 18]);
+  ctx.strokeStyle = 'rgba(255, 247, 218, 0.56)';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  boardPath
+    .filter(({ index }) => index !== 100)
+    .forEach((cell, index) => {
+      const pointX = cell.x * width;
+      const pointY = cell.y * height;
+      if (index === 0) {
+        ctx.moveTo(pointX, pointY);
+      } else {
+        ctx.lineTo(pointX, pointY);
+      }
+    });
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  boardPath
+    .filter(({ index }) => index !== 100)
+    .forEach((cell, index) => {
+      const pointX = cell.x * width;
+      const pointY = cell.y * height;
+      if (index === 0) {
+        ctx.moveTo(pointX, pointY);
+      } else {
+        ctx.lineTo(pointX, pointY);
+      }
+    });
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -88,36 +133,42 @@ function drawPalmTree(ctx, x, y, scale = 1) {
 
 function drawCenterIsland(ctx, width, height) {
   const centerX = width * 0.53;
-  const centerY = height * 0.47;
+  const centerY = height * 0.48;
 
   ctx.save();
+  const islandGlow = ctx.createRadialGradient(centerX, centerY + 40, 30, centerX, centerY + 40, 220);
+  islandGlow.addColorStop(0, 'rgba(255, 236, 166, 0.85)');
+  islandGlow.addColorStop(1, 'rgba(255, 236, 166, 0)');
+  ctx.fillStyle = islandGlow;
+  ctx.fillRect(centerX - 260, centerY - 170, 520, 340);
+
   ctx.fillStyle = '#ecd28c';
   ctx.beginPath();
-  ctx.ellipse(centerX, centerY + 40, 185, 92, -0.06, 0, Math.PI * 2);
+  ctx.ellipse(centerX, centerY + 46, 220, 104, -0.04, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.fillStyle = '#61b56a';
   ctx.beginPath();
-  ctx.ellipse(centerX - 56, centerY + 8, 78, 38, -0.16, 0, Math.PI * 2);
+  ctx.ellipse(centerX - 64, centerY + 10, 92, 42, -0.18, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(centerX + 24, centerY - 4, 88, 44, 0.12, 0, Math.PI * 2);
+  ctx.ellipse(centerX + 26, centerY - 2, 108, 50, 0.1, 0, Math.PI * 2);
   ctx.fill();
 
-  drawPalmTree(ctx, centerX - 82, centerY + 42, 1);
-  drawPalmTree(ctx, centerX - 28, centerY + 48, 0.92);
-  drawPalmTree(ctx, centerX + 52, centerY + 42, 0.86);
+  drawPalmTree(ctx, centerX - 100, centerY + 38, 1.06);
+  drawPalmTree(ctx, centerX - 30, centerY + 46, 0.94);
+  drawPalmTree(ctx, centerX + 84, centerY + 34, 0.84);
 
   ctx.fillStyle = '#f5d14e';
-  for (let index = 0; index < 18; index += 1) {
+  for (let index = 0; index < 22; index += 1) {
     const angle = (Math.PI * 2 * index) / 18;
-    const radiusX = 82 + (index % 3) * 12;
-    const radiusY = 24 + (index % 2) * 16;
+    const radiusX = 106 + (index % 3) * 16;
+    const radiusY = 30 + (index % 2) * 22;
     ctx.beginPath();
     ctx.arc(
       centerX + Math.cos(angle) * radiusX,
-      centerY + 66 + Math.sin(angle) * radiusY,
-      7,
+      centerY + 72 + Math.sin(angle) * radiusY,
+      8,
       0,
       Math.PI * 2,
     );
@@ -125,24 +176,24 @@ function drawCenterIsland(ctx, width, height) {
   }
 
   ctx.fillStyle = '#5a3518';
-  ctx.fillRect(centerX - 46, centerY + 4, 92, 58);
+  ctx.fillRect(centerX - 58, centerY - 4, 116, 72);
   ctx.fillStyle = '#8d5c2e';
-  ctx.fillRect(centerX - 42, centerY + 10, 84, 48);
+  ctx.fillRect(centerX - 52, centerY + 4, 104, 60);
   ctx.strokeStyle = '#2d1a0f';
   ctx.lineWidth = 4;
-  ctx.strokeRect(centerX - 42, centerY + 10, 84, 48);
+  ctx.strokeRect(centerX - 52, centerY + 4, 104, 60);
 
   ctx.fillStyle = '#392012';
   ctx.beginPath();
-  ctx.moveTo(centerX - 50, centerY + 8);
-  ctx.lineTo(centerX + 4, centerY - 34);
-  ctx.lineTo(centerX + 56, centerY - 4);
-  ctx.lineTo(centerX, centerY + 18);
+  ctx.moveTo(centerX - 60, centerY + 2);
+  ctx.lineTo(centerX + 4, centerY - 44);
+  ctx.lineTo(centerX + 66, centerY - 8);
+  ctx.lineTo(centerX, centerY + 24);
   ctx.closePath();
   ctx.fill();
 
   ctx.fillStyle = '#f4d04b';
-  ctx.fillRect(centerX - 7, centerY + 28, 14, 14);
+  ctx.fillRect(centerX - 9, centerY + 24, 18, 18);
 
   ctx.restore();
 }
@@ -277,6 +328,7 @@ export function renderBoardRenderer(root, { state = {}, size = DEFAULT_SIZE } = 
 
   ctx.clearRect(0, 0, size.width, size.height);
   drawBoardWater(ctx, size.width, size.height);
+  drawRouteGuideline(ctx, size.width, size.height);
   drawCenterIsland(ctx, size.width, size.height);
 
   renderBoardTiles(root, state);

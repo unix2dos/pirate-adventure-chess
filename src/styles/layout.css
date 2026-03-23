@@ -46,8 +46,8 @@
 
 .board-stage-shell {
   position: relative;
-  width: min(calc(100vw - (var(--scene-padding) * 2)), calc(100vh - (var(--scene-padding) * 2)));
-  aspect-ratio: 1 / 1;
+  width: min(calc(100vw - (var(--scene-padding) * 2)), calc((100vh - (var(--scene-padding) * 2)) * 1.6));
+  aspect-ratio: 16 / 10;
   min-height: 0;
   border-radius: 32px;
   overflow: hidden;
@@ -87,7 +87,8 @@
   }
 
   .board-stage-shell {
-    width: min(calc(100vw - (var(--scene-padding) * 2)), calc(100vh - (var(--scene-padding) * 2)));
+    width: min(calc(100vw - (var(--scene-padding) * 2)), calc((100vh - (var(--scene-padding) * 2)) * 1.35));
+    aspect-ratio: 5 / 4;
   }
 }
 
@@ -100,5 +101,10 @@
   .scene-panel {
     border-radius: 26px;
     padding: 1.125rem;
+  }
+
+  .board-stage-shell {
+    width: min(calc(100vw - (var(--scene-padding) * 2)), calc((100vh - (var(--scene-padding) * 2)) * 1.1));
+    aspect-ratio: 11 / 10;
   }
 }

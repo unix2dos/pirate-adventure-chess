@@ -124,11 +124,12 @@
 
 .board-stage-shell {
   background:
-    linear-gradient(180deg, #d8bb8b 0%, #cfa26d 100%);
-  border: 12px solid #c79258;
+    linear-gradient(180deg, #d8bb8b 0%, #ca9c62 100%);
+  border: 14px solid #c79258;
   box-shadow:
-    0 16px 36px rgba(80, 56, 23, 0.18),
-    inset 0 0 0 2px rgba(255, 245, 220, 0.34);
+    0 18px 42px rgba(80, 56, 23, 0.18),
+    inset 0 0 0 2px rgba(255, 245, 220, 0.34),
+    inset 0 0 0 10px rgba(162, 112, 56, 0.2);
 }
 
 .board-stage-shell::before {
@@ -137,6 +138,15 @@
   inset: 0;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 18%);
+  pointer-events: none;
+}
+
+.board-stage-shell::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 244, 221, 0.34);
   pointer-events: none;
 }
 

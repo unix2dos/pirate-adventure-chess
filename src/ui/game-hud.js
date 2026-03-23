@@ -29,6 +29,11 @@ export function renderGameHud(root, { state }) {
 
   root.innerHTML = `
     <aside data-scene="game-hud" class="hud-float">
+      <div class="hud-turn-pill" data-role="turn-pill" style="--current-player:${currentPlayer.color};">
+        <span class="hud-turn-pill__badge">${currentPlayerNumber}</span>
+        <span class="hud-turn-pill__copy">第 ${state.turnNumber ?? 1} 回合 · ${currentPlayer.name}</span>
+      </div>
+
       <details class="hud-drawer" data-role="hud-drawer">
         <summary class="hud-drawer__toggle" data-role="hud-toggle">
           航海卡
