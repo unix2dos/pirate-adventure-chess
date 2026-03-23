@@ -185,31 +185,98 @@
   line-height: 1.05;
 }
 
-.hud-mini {
-  width: 100%;
+.hud-float {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hud-float__dock {
+  position: absolute;
+  right: clamp(0.9rem, 2vw, 1.35rem);
+  bottom: clamp(0.9rem, 2vw, 1.35rem);
   display: grid;
-  gap: 0.75rem;
-  align-content: start;
+  justify-items: end;
+  gap: 0.6rem;
+  pointer-events: none;
 }
 
-.hud-mini__section {
+.hud-drawer {
+  position: absolute;
+  left: clamp(0.9rem, 2vw, 1.35rem);
+  bottom: clamp(0.9rem, 2vw, 1.35rem);
+  width: min(21rem, calc(100% - 5.5rem));
+  pointer-events: auto;
+}
+
+.hud-drawer__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.58rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.95);
+  border: 2px solid rgba(117, 84, 42, 0.28);
+  box-shadow: 0 8px 20px rgba(83, 57, 22, 0.16);
+  color: #55371c;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hud-drawer__toggle::-webkit-details-marker {
+  display: none;
+}
+
+.hud-drawer__toggle::before {
+  content: '☰';
+  font-size: 0.86rem;
+}
+
+.hud-drawer[open] .hud-drawer__toggle::before {
+  content: '×';
+}
+
+.hud-drawer__sheet {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.72rem;
+  border-radius: 24px;
+  background: rgba(255, 248, 232, 0.96);
+  border: 1px solid rgba(107, 74, 34, 0.18);
+  box-shadow: 0 18px 30px rgba(60, 42, 16, 0.18);
+  backdrop-filter: blur(4px);
+}
+
+.hud-drawer__panel {
   border-radius: 18px;
-  padding: 0.85rem 0.9rem;
+  padding: 0.75rem 0.85rem;
   background: rgba(255, 250, 240, 0.96);
-  border: 1px solid rgba(87, 63, 34, 0.16);
-  box-shadow: 0 10px 20px rgba(60, 46, 23, 0.08);
+  border: 1px solid rgba(87, 63, 34, 0.13);
 }
 
-.hud-mini__section--turn {
+.hud-drawer__panel--turn {
   background: color-mix(in oklab, white 52%, var(--lemon));
 }
 
-.hud-mini__section--legend {
+.hud-drawer__panel--legend {
   background: rgba(255, 255, 255, 0.92);
 }
 
-.hud-mini__section--action {
-  background: color-mix(in oklab, white 70%, var(--sea-bright));
+.hud-drawer__panel--hint {
+  background: color-mix(in oklab, white 74%, var(--sea-bright));
+}
+
+.hud-drawer__hint {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.4;
 }
 
 .hud-mini__eyebrow {
@@ -297,10 +364,6 @@
 
 .hud-mini__event {
   margin: 0;
-  padding: 0.7rem 0.85rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px dashed rgba(85, 63, 30, 0.22);
   color: var(--ink-strong);
   display: grid;
   gap: 0.15rem;
@@ -317,6 +380,47 @@
 .hud-mini__event-text {
   font-size: 0.88rem;
   line-height: 1.35;
+}
+
+.dice-fab {
+  min-width: 5.6rem;
+  min-height: 5.6rem;
+  padding: 0.8rem 1rem;
+  display: inline-grid;
+  place-items: center;
+  gap: 0.15rem;
+  border-radius: 1.75rem;
+  box-shadow:
+    0 16px 28px rgba(87, 45, 17, 0.22),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+  pointer-events: auto;
+}
+
+.dice-fab__icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.dice-fab__label {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+  .hud-drawer {
+    width: min(18rem, calc(100% - 5.1rem));
+  }
+
+  .hud-drawer__sheet {
+    padding: 0.62rem;
+  }
+
+  .dice-fab {
+    min-width: 4.95rem;
+    min-height: 4.95rem;
+    border-radius: 1.5rem;
+  }
 }
 
 .hud-mini__action-copy {

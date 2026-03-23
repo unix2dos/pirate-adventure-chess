@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderGameHud } from '../../src/ui/game-hud.js';
 
 describe('game HUD', () => {
-  it('renders a compact sidebar focused on turn info and the roll action', () => {
+  it('renders a floating dice button and keeps the rest of the voyage info folded away', () => {
     const root = document.createElement('div');
 
     renderGameHud(root, {
@@ -17,10 +17,16 @@ describe('game HUD', () => {
       },
     });
 
+    const drawer = root.querySelector('[data-role="hud-drawer"]');
+
     expect(root.textContent).toContain('小船长');
-    expect(root.querySelector('[data-role="player-legend"]')).not.toBeNull();
-    expect(root.querySelector('[data-role="event-note"]')).not.toBeNull();
     expect(root.querySelector('[data-role="roll-action"]')).not.toBeNull();
+    expect(root.querySelector('[data-role="hud-toggle"]')).not.toBeNull();
+    expect(drawer).not.toBeNull();
+    expect(drawer?.hasAttribute('open')).toBe(false);
+    expect(drawer?.contains(root.querySelector('[data-role="current-player-banner"]'))).toBe(true);
+    expect(drawer?.contains(root.querySelector('[data-role="player-legend"]'))).toBe(true);
+    expect(drawer?.contains(root.querySelector('[data-role="event-note"]'))).toBe(true);
     expect(root.querySelector('[data-role="zone-objective-card"]')).toBeNull();
     expect(root.querySelector('[data-role="crew-strip"]')).toBeNull();
   });

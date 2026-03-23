@@ -28,35 +28,48 @@ export function renderGameHud(root, { state }) {
       : '掷骰出航，看看下一站会撞见什么';
 
   root.innerHTML = `
-    <aside data-scene="game-hud" class="hud-mini">
-      <section data-role="current-player-banner" class="hud-mini__section hud-mini__section--turn" style="--current-player:${currentPlayer.color};">
-        <p class="hud-mini__eyebrow">${turnLabel}</p>
-        <div class="hud-mini__current">
-          <span class="hud-mini__current-badge">${currentPlayerNumber}</span>
-          <div class="hud-mini__current-copy">
-            <strong>${currentPlayer.name}</strong>
-            <span>第 ${currentPlayer.position ?? 1} 格</span>
-          </div>
+    <aside data-scene="game-hud" class="hud-float">
+      <details class="hud-drawer" data-role="hud-drawer">
+        <summary class="hud-drawer__toggle" data-role="hud-toggle">
+          航海卡
+        </summary>
+        <div class="hud-drawer__sheet">
+          <section data-role="current-player-banner" class="hud-drawer__panel hud-drawer__panel--turn" style="--current-player:${currentPlayer.color};">
+            <p class="hud-mini__eyebrow">${turnLabel}</p>
+            <div class="hud-mini__current">
+              <span class="hud-mini__current-badge">${currentPlayerNumber}</span>
+              <div class="hud-mini__current-copy">
+                <strong>${currentPlayer.name}</strong>
+                <span>第 ${currentPlayer.position ?? 1} 格</span>
+              </div>
+            </div>
+          </section>
+
+          <section data-role="player-legend" class="hud-drawer__panel hud-drawer__panel--legend">
+            <p class="hud-mini__eyebrow">玩家</p>
+            <ul class="hud-legend">
+              ${renderLegendItems(crew, currentPlayer.id)}
+            </ul>
+          </section>
+
+          <section class="hud-drawer__panel hud-drawer__panel--event">
+            <p class="hud-mini__eyebrow">最近</p>
+            <p class="hud-mini__event" data-role="event-note">
+              <span class="hud-mini__event-text">${recentEventTitle}</span>
+            </p>
+          </section>
+
+          <section class="hud-drawer__panel hud-drawer__panel--hint">
+            <p class="hud-mini__eyebrow">提示</p>
+            <p class="hud-drawer__hint">${actionTitle}</p>
+          </section>
         </div>
-      </section>
+      </details>
 
-      <section data-role="player-legend" class="hud-mini__section hud-mini__section--legend">
-        <p class="hud-mini__eyebrow">玩家</p>
-        <ul class="hud-legend">
-          ${renderLegendItems(crew, currentPlayer.id)}
-        </ul>
-      </section>
-
-      <p class="hud-mini__event" data-role="event-note">
-        <span class="hud-mini__event-label">最近</span>
-        <span class="hud-mini__event-text">${recentEventTitle}</span>
-      </p>
-
-      <section data-role="action-dock" class="hud-mini__section hud-mini__section--action">
-        <p class="hud-mini__eyebrow">动作</p>
-        <p class="hud-mini__action-copy">${actionTitle}</p>
-        <button class="action-button action-button--primary roll-button roll-button--compact" data-role="roll-action" type="button">
-          ${state.gameOver ? '宝藏到手' : '掷骰出航'}
+      <section data-role="action-dock" class="hud-float__dock">
+        <button class="action-button action-button--primary dice-fab" data-role="roll-action" type="button">
+          <span class="dice-fab__icon">🎲</span>
+          <span class="dice-fab__label">${state.gameOver ? '终点' : '掷骰'}</span>
         </button>
       </section>
     </aside>

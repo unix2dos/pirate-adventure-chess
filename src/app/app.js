@@ -70,8 +70,9 @@ function renderGameScene(root, payload = {}) {
   root.innerHTML = `
     <section data-scene="game" class="scene-shell game-scene">
       <div class="game-layout">
-        <div data-role="board-stage" class="board-stage-shell"></div>
-        <div data-role="hud-stage" class="hud-stage-shell"></div>
+        <div data-role="board-stage" class="board-stage-shell">
+          <div data-role="hud-stage" class="hud-stage-shell"></div>
+        </div>
       </div>
       <div data-role="event-overlay-stage" class="overlay-layer"></div>
     </section>
