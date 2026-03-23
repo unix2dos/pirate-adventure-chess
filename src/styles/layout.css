@@ -1,8 +1,14 @@
 .scene-shell {
   position: relative;
-  min-height: 100vh;
+  min-height: var(--app-height);
   --scene-padding: clamp(1rem, 2.4vw, 2rem);
-  padding: var(--scene-padding);
+  --scene-pad-top: calc(var(--scene-padding) + var(--safe-top));
+  --scene-pad-right: calc(var(--scene-padding) + var(--safe-right));
+  --scene-pad-bottom: calc(var(--scene-padding) + var(--safe-bottom));
+  --scene-pad-left: calc(var(--scene-padding) + var(--safe-left));
+  --scene-inline-gutter: calc(var(--scene-pad-left) + var(--scene-pad-right));
+  --scene-block-gutter: calc(var(--scene-pad-top) + var(--scene-pad-bottom));
+  padding: var(--scene-pad-top) var(--scene-pad-right) var(--scene-pad-bottom) var(--scene-pad-left);
 }
 
 .scene-shell > * {
@@ -27,8 +33,16 @@
   width: 100%;
   margin: 0 auto;
   display: grid;
-  min-height: calc(100vh - (var(--scene-padding) * 2));
+  min-height: calc(var(--app-height) - var(--scene-block-gutter));
   place-items: center;
+}
+
+.game-stage {
+  position: relative;
+  display: grid;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: center;
 }
 
 .scene-panel {
@@ -46,9 +60,10 @@
 
 .board-stage-shell {
   position: relative;
-  width: min(calc(100vw - (var(--scene-padding) * 2)), calc((100vh - (var(--scene-padding) * 2)) * 1.6));
+  width: min(calc(100vw - var(--scene-inline-gutter)), calc((var(--app-height) - var(--scene-block-gutter)) * 1.6));
   aspect-ratio: 16 / 10;
   min-height: 0;
+  max-width: 100%;
   border-radius: 32px;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
@@ -87,7 +102,7 @@
   }
 
   .board-stage-shell {
-    width: min(calc(100vw - (var(--scene-padding) * 2)), calc((100vh - (var(--scene-padding) * 2)) * 1.35));
+    width: min(calc(100vw - var(--scene-inline-gutter)), calc((var(--app-height) - var(--scene-block-gutter)) * 1.35));
     aspect-ratio: 5 / 4;
   }
 }
@@ -95,7 +110,6 @@
 @media (max-width: 640px) {
   .scene-shell {
     --scene-padding: 0.75rem;
-    padding: var(--scene-padding);
   }
 
   .scene-panel {
@@ -104,7 +118,35 @@
   }
 
   .board-stage-shell {
-    width: min(calc(100vw - (var(--scene-padding) * 2)), calc((100vh - (var(--scene-padding) * 2)) * 1.1));
+    width: min(calc(100vw - var(--scene-inline-gutter)), calc((var(--app-height) - var(--scene-block-gutter)) * 1.1));
     aspect-ratio: 11 / 10;
+  }
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .game-scene {
+    --scene-padding: 0.55rem;
+  }
+
+  .game-layout {
+    min-height: auto;
+    place-items: start stretch;
+    align-content: start;
+  }
+
+  .game-stage {
+    width: 100%;
+    gap: 0.85rem;
+  }
+
+  .board-stage-shell {
+    width: 100%;
+  }
+
+  .hud-stage-shell {
+    position: static;
+    inset: auto;
+    width: 100%;
+    pointer-events: auto;
   }
 }

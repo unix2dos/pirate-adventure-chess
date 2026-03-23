@@ -1,5 +1,10 @@
 :root {
   color-scheme: light;
+  --app-height: 100vh;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
   --font-display: 'Avenir Next Rounded', 'Trebuchet MS', 'Marker Felt', 'Hannotate SC', sans-serif;
   --font-body: 'Avenir Next', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --bg-sky: oklch(0.93 0.06 220);
@@ -17,16 +22,22 @@
   --shadow-md: 0 16px 32px color-mix(in oklab, var(--ink-strong) 10%, transparent);
 }
 
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
 
 html {
-  min-height: 100%;
+  min-height: var(--app-height);
 }
 
 body {
-  min-height: 100vh;
+  min-height: var(--app-height);
   margin: 0;
   font-family: var(--font-body);
   color: var(--ink-strong);
@@ -79,7 +90,7 @@ img {
 
 #app[data-theme='pirate-party'] {
   position: relative;
-  min-height: 100vh;
+  min-height: var(--app-height);
   isolation: isolate;
 }
 
