@@ -8,6 +8,7 @@ import { renderAnimationLayer } from '../render/animation-layer.js';
 import { renderGameHud } from '../ui/game-hud.js';
 import { renderEventOverlay } from '../ui/event-overlay.js';
 import { renderWinScreen } from '../ui/win-screen.js';
+import { createAudioEngine } from '../audio/audio-engine.js';
 
 const PLAYER_COLORS = ['#ff6b6b', '#4ecdc4', '#ffd166', '#7a9cff'];
 const TURN_ANIMATION_MS = {
@@ -74,6 +75,7 @@ function createHudState(engineState, recentTitle = '准备出航', overrides = {
     gameOver: hasOwnOverride(overrides, 'gameOver') ? overrides.gameOver : engineState.gameOver,
     pendingEvent: hasOwnOverride(overrides, 'pendingEvent') ? overrides.pendingEvent : engineState.pendingEvent,
     animation: hasOwnOverride(overrides, 'animation') ? overrides.animation : null,
+    soundMuted: hasOwnOverride(overrides, 'soundMuted') ? overrides.soundMuted : false,
   };
 }
 
@@ -101,8 +103,15 @@ function createWinPayload(engineState, onReplay) {
 }
 
 function renderGameScene(root, payload = {}) {
-  const { engine, onWin } = payload;
-  let sceneState = payload.state ?? (engine ? createHudState(engine.getState()) : null);
+  const { engine, onWin, soundEngine } = payload;
+  function deriveHudState(engineState, recentTitle = '准备出航', overrides = {}) {
+    return createHudState(engineState, recentTitle, {
+      soundMuted: soundEngine?.isMuted?.() ?? false,
+      ...overrides,
+    });
+  }
+
+  let sceneState = payload.state ?? (engine ? deriveHudState(engine.getState()) : null);
   let isAnimatingTurn = false;
 
   root.innerHTML = `
@@ -123,7 +132,7 @@ function renderGameScene(root, payload = {}) {
   async function playTurnSequence(turnStartState, nextEngineState) {
     const action = nextEngineState.lastAction;
     if (!action) {
-      sceneState = createHudState(nextEngineState);
+      sceneState = deriveHudState(nextEngineState);
       renderFrame();
       if (nextEngineState.gameOver && typeof onWin === 'function') {
         onWin(nextEngineState);
@@ -137,7 +146,7 @@ function renderGameScene(root, payload = {}) {
       ?? displayCrew[0];
 
     if (action.type === 'skip') {
-      sceneState = createHudState(turnStartState, '这一回合先休息一下', {
+      sceneState = deriveHudState(turnStartState, '这一回合先休息一下', {
         crew: displayCrew,
         currentPlayer: displayPlayer,
         pendingEvent: null,
@@ -153,13 +162,16 @@ function renderGameScene(root, payload = {}) {
       });
       renderFrame();
       await wait(TURN_ANIMATION_MS.skipPause);
-      sceneState = createHudState(nextEngineState);
+      sceneState = deriveHudState(nextEngineState);
       renderFrame();
       return;
     }
 
+    await soundEngine?.unlock?.();
+    soundEngine?.playDicePress?.();
     for (const face of buildDiceSequence(action.roll)) {
-      sceneState = createHudState(turnStartState, '骰子正在空中翻滚', {
+      soundEngine?.playDiceRollTick?.({ face });
+      sceneState = deriveHudState(turnStartState, '骰子正在空中翻滚', {
         crew: displayCrew,
         currentPlayer: displayPlayer,
         pendingEvent: null,
@@ -177,12 +189,14 @@ function renderGameScene(root, payload = {}) {
       renderFrame();
       await wait(TURN_ANIMATION_MS.rollStep);
     }
+    soundEngine?.playDiceStop?.({ value: action.roll });
 
     const trail = [];
     for (const step of action.trail ?? []) {
       displayPlayer.position = step;
       trail.push(step);
-      sceneState = createHudState(turnStartState, '航线亮起来了', {
+      soundEngine?.playStepHop?.({ stepIndex: trail.length, totalSteps: action.trail.length });
+      sceneState = deriveHudState(turnStartState, '航线亮起来了', {
         crew: displayCrew,
         currentPlayer: displayPlayer,
         pendingEvent: null,
@@ -201,7 +215,18 @@ function renderGameScene(root, payload = {}) {
       await wait(TURN_ANIMATION_MS.moveStep);
     }
 
-    sceneState = createHudState(nextEngineState, nextEngineState.recentEvent?.title ?? '顺利停稳', {
+    soundEngine?.playLandingBloom?.({
+      isEvent: Boolean(nextEngineState.pendingEvent),
+      isWin: Boolean(nextEngineState.gameOver),
+    });
+    if (nextEngineState.pendingEvent) {
+      soundEngine?.playEventSpark?.({ eventId: nextEngineState.pendingEvent.event.id });
+    }
+    if (nextEngineState.gameOver) {
+      soundEngine?.playTreasureWin?.();
+    }
+
+    sceneState = deriveHudState(nextEngineState, nextEngineState.recentEvent?.title ?? '顺利停稳', {
       crew: displayCrew,
       currentPlayer: displayPlayer,
       pendingEvent: null,
@@ -227,7 +252,7 @@ function renderGameScene(root, payload = {}) {
       return;
     }
 
-    sceneState = createHudState(nextEngineState, nextEngineState.recentEvent?.title ?? '海浪推着船队前进', {
+    sceneState = deriveHudState(nextEngineState, nextEngineState.recentEvent?.title ?? '海浪推着船队前进', {
       animation: {
         phase: 'result',
         playerId: action.playerId,
@@ -245,7 +270,7 @@ function renderGameScene(root, payload = {}) {
     }
 
     await wait(TURN_ANIMATION_MS.settlePause);
-    sceneState = createHudState(
+    sceneState = deriveHudState(
       nextEngineState,
       nextEngineState.gameOver ? '宝藏到手，冲线成功' : '海浪推着船队前进',
     );
@@ -272,12 +297,24 @@ function renderGameScene(root, payload = {}) {
             return;
           }
 
-          sceneState = createHudState(nextEngineState);
+          sceneState = deriveHudState(nextEngineState);
           renderFrame();
         },
       });
     } else {
       overlayStage.innerHTML = '';
+    }
+
+    const soundToggle = hudStage.querySelector('[data-role="sound-toggle"]');
+    if (soundToggle && soundEngine) {
+      soundToggle.addEventListener('click', () => {
+        soundEngine.setMuted(!soundEngine.isMuted());
+        sceneState = {
+          ...sceneState,
+          soundMuted: soundEngine.isMuted(),
+        };
+        renderFrame();
+      }, { once: true });
     }
 
     const rollButton = hudStage.querySelector('[data-role="roll-action"]');
@@ -307,12 +344,15 @@ function renderGameScene(root, payload = {}) {
   renderFrame();
 }
 
-export function createApp(root) {
+export function createApp(root, options = {}) {
   if (!root) {
     throw new Error('createApp requires a mount element with id="app".');
   }
 
   root.dataset.theme = 'pirate-party';
+
+  const soundEngine = options.soundEngine ?? createAudioEngine();
+  const rollDice = options.rollDice ?? (async () => Math.floor(Math.random() * 6) + 1);
 
   const sceneManager = createSceneManager(root, {
     renderStart(mount, { onStart }) {
@@ -332,12 +372,13 @@ export function createApp(root) {
         const players = createInitialPlayers(config?.players ?? []);
         const engine = createGameEngine({
           players,
-          rollDice: async () => Math.floor(Math.random() * 6) + 1,
+          rollDice,
         });
 
         sceneManager.showGame({
           engine,
-          state: createHudState(engine.getState(), '扬帆起航'),
+          soundEngine,
+          state: createHudState(engine.getState(), '扬帆起航', { soundMuted: soundEngine.isMuted() }),
           onWin(engineState) {
             sceneManager.showWin(createWinPayload(engineState, showStartScene));
           },

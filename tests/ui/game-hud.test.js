@@ -14,6 +14,7 @@ describe('game HUD', () => {
           { id: 'crew-2', name: '海盗甲', color: '#4ecdc4', position: 16 },
         ],
         recentEvent: { title: '海豚快线' },
+        soundMuted: false,
       },
     });
 
@@ -34,6 +35,7 @@ describe('game HUD', () => {
     expect(drawer?.contains(root.querySelector('[data-role="event-note"]'))).toBe(true);
     expect(root.querySelector('[data-role="zone-objective-card"]')).toBeNull();
     expect(root.querySelector('[data-role="crew-strip"]')).toBeNull();
+    expect(root.querySelector('[data-role="sound-toggle"]')).not.toBeNull();
   });
 
   it('shows a rolling dice state with the live face value while a turn animation is playing', () => {

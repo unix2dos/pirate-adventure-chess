@@ -91,6 +91,14 @@ export function renderGameHud(root, { state }) {
       </details>
 
       <section data-role="action-dock" class="hud-float__dock">
+        <button
+          class="action-button action-button--secondary sound-toggle"
+          data-role="sound-toggle"
+          aria-pressed="${state.soundMuted ? 'true' : 'false'}"
+          type="button"
+        >
+          <span class="sound-toggle__icon">${state.soundMuted ? '🔇' : '🔊'}</span>
+        </button>
         <button class="action-button action-button--primary dice-fab" data-role="roll-action" data-motion="${motionPhase}" type="button">
           <span class="dice-fab__icon">🎲</span>
           <span class="dice-fab__label">${actionLabel}</span>
