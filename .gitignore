@@ -3,4 +3,7 @@
 .gemini/
 .agents/
 .worktrees/
-
+node_modules/
+dist/
+.vite/
+coverage/

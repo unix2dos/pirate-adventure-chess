@@ -1,0 +1,97 @@
+:root {
+  color-scheme: light;
+  --font-display: 'Avenir Next Rounded', 'Trebuchet MS', 'Marker Felt', 'Hannotate SC', sans-serif;
+  --font-body: 'Avenir Next', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --bg-sky: oklch(0.93 0.06 220);
+  --bg-horizon: oklch(0.88 0.1 195);
+  --bg-sand: oklch(0.96 0.05 95);
+  --sea-deep: oklch(0.66 0.14 229);
+  --sea-bright: oklch(0.84 0.13 206);
+  --coral: oklch(0.72 0.19 36);
+  --lemon: oklch(0.9 0.15 97);
+  --mint: oklch(0.88 0.13 165);
+  --ink-strong: oklch(0.34 0.08 248);
+  --ink-soft: oklch(0.5 0.05 240);
+  --panel: color-mix(in oklab, white 88%, var(--bg-sand));
+  --shadow-lg: 0 24px 60px color-mix(in oklab, var(--ink-strong) 14%, transparent);
+  --shadow-md: 0 16px 32px color-mix(in oklab, var(--ink-strong) 10%, transparent);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink-strong);
+  background:
+    radial-gradient(circle at 12% 12%, color-mix(in oklab, white 70%, var(--lemon)) 0, transparent 24%),
+    radial-gradient(circle at 88% 8%, color-mix(in oklab, white 68%, var(--mint)) 0, transparent 18%),
+    linear-gradient(180deg, var(--bg-sky) 0%, var(--bg-horizon) 28%, var(--bg-sand) 100%);
+  overflow-x: hidden;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+body::before {
+  background:
+    radial-gradient(circle at 20% 30%, color-mix(in oklab, white 72%, var(--coral)) 0 2px, transparent 2px 100%),
+    radial-gradient(circle at 70% 24%, color-mix(in oklab, white 76%, var(--mint)) 0 3px, transparent 3px 100%),
+    radial-gradient(circle at 82% 72%, color-mix(in oklab, white 76%, var(--lemon)) 0 2px, transparent 2px 100%);
+  background-size: 240px 240px, 320px 320px, 280px 280px;
+  opacity: 0.55;
+}
+
+body::after {
+  background:
+    radial-gradient(circle at 50% 100%, color-mix(in oklab, var(--sea-bright) 72%, white) 0, transparent 38%),
+    linear-gradient(180deg, transparent 0%, color-mix(in oklab, var(--sea-bright) 35%, transparent) 100%);
+  transform: translateY(18%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+canvas,
+img {
+  display: block;
+  max-width: 100%;
+}
+
+#app[data-theme='pirate-party'] {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+#app[data-theme='pirate-party']::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 50%;
+  width: min(40vw, 420px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -24%);
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in oklab, white 68%, var(--lemon)) 0%, transparent 68%);
+  opacity: 0.7;
+  pointer-events: none;
+}
