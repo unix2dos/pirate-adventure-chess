@@ -56,6 +56,10 @@ describe('app sound effects', () => {
       rollDice: async () => 4,
     });
 
+    const useAICheckbox = root.querySelector('#use-ai');
+    useAICheckbox.checked = false;
+    useAICheckbox.dispatchEvent(new Event('change'));
+
     root.querySelector('[data-role="start-adventure"]').click();
     root.querySelector('[data-role="roll-action"]').click();
 

@@ -1,4 +1,5 @@
 import { boardPath, boardStickers, getCellMeta } from '../core/board-data.js';
+import { getPlayerBadgeText } from '../core/players.js';
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
 const STICKER_ICONS = {
@@ -286,7 +287,7 @@ function renderBoardTiles(root, state = {}) {
     position: 'absolute',
     inset: '0',
     pointerEvents: 'none',
-    zIndex: '2',
+    zIndex: '4',
   });
 
   tileLayer.innerHTML = boardPath
@@ -321,21 +322,27 @@ function renderBoardStickers(root) {
     position: 'absolute',
     inset: '0',
     pointerEvents: 'none',
-    zIndex: '4',
+    zIndex: '3',
   });
 
   stickerLayer.innerHTML = boardStickers
-    .map((sticker) => `
-      <div
-        class="board-sticker board-sticker--${sticker.style}"
-        data-board-sticker="${sticker.id}"
-        style="left:${(sticker.x * 100).toFixed(2)}%;top:${(sticker.y * 100).toFixed(2)}%;--sticker-rotation:${sticker.rotation}deg;"
-      >
-        <span class="board-sticker__icon" aria-hidden="true">${STICKER_ICONS[sticker.style] ?? '✨'}</span>
-        <span class="board-sticker__title">${sticker.text}</span>
-        <span class="board-sticker__detail">${sticker.detail}</span>
-      </div>
-    `)
+    .map((sticker) => {
+      const lift = sticker.offsetY <= 0 ? 'up' : 'down';
+      return `
+        <div
+          class="board-sticker board-sticker--${sticker.style}"
+          data-board-sticker="${sticker.id}"
+          data-lift="${lift}"
+          aria-label="${sticker.text}，${sticker.detail}"
+          title="${sticker.text} · ${sticker.detail}"
+          style="left:${(sticker.x * 100).toFixed(2)}%;top:${(sticker.y * 100).toFixed(2)}%;--sticker-rotation:${sticker.rotation}deg;"
+        >
+          <span class="board-sticker__icon" aria-hidden="true">${STICKER_ICONS[sticker.style] ?? '✨'}</span>
+          <span class="board-sticker__title">${sticker.text}</span>
+          <span class="board-sticker__detail sr-only">${sticker.detail}</span>
+        </div>
+      `;
+    })
     .join('');
 }
 
@@ -356,7 +363,6 @@ function renderCenterSign(root) {
         <span>🎉</span>
         <span>✨</span>
       </div>
-      <span class="board-center-sign__banner" data-role="board-finish-banner">宝藏乐园</span>
       <span class="board-center-sign__flag">终点</span>
       <span class="board-center-sign__value">100</span>
     </div>
@@ -386,18 +392,20 @@ function renderPlayerChips(root, state = {}) {
       const stackColumn = index % 2 === 0 ? -14 : 14;
       const stackRow = Math.floor(index / 2) * 14;
       const playerMotion = player.id === motionPlayerId ? motionPhase : '';
+      const badgeText = getPlayerBadgeText(player.name, index + 1);
 
       return `
         <div
           class="board-player-chip ${playerMotion ? `board-player-chip--${playerMotion}` : ''}"
           data-player-chip="${index + 1}"
+          data-player-name="${player.name ?? ''}"
           data-motion="${playerMotion}"
           style="left:calc(${(cell.x * 100).toFixed(2)}% + ${stackColumn}px);top:calc(${(cell.y * 100).toFixed(2)}% - ${24 + stackRow}px);--chip-color:${player.color ?? '#ff6b6b'};"
-          title="${index + 1}号 ${player.name}"
+          title="${player.name} · 第 ${player.position ?? cell.index} 格"
         >
           <span class="board-player-chip__shadow" aria-hidden="true"></span>
           <span class="board-player-chip__ring" aria-hidden="true"></span>
-          <span class="board-player-chip__badge">${index + 1}</span>
+          <span class="board-player-chip__badge">${badgeText}</span>
         </div>
       `;
     })

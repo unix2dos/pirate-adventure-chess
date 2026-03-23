@@ -18,6 +18,7 @@ const TURN_ANIMATION_MS = {
   settlePause: 220,
   skipPause: 280,
 };
+const AI_TURN_DELAY_MS = 520;
 
 function hasOwnOverride(overrides, key) {
   return Object.prototype.hasOwnProperty.call(overrides, key);
@@ -113,6 +114,7 @@ function renderGameScene(root, payload = {}) {
 
   let sceneState = payload.state ?? (engine ? deriveHudState(engine.getState()) : null);
   let isAnimatingTurn = false;
+  let aiTurnTimeoutId = null;
 
   root.innerHTML = `
     <section data-scene="game" class="scene-shell game-scene">
@@ -129,6 +131,13 @@ function renderGameScene(root, payload = {}) {
   const boardStage = root.querySelector('[data-role="board-stage"]');
   const hudStage = root.querySelector('[data-role="hud-stage"]');
   const overlayStage = root.querySelector('[data-role="event-overlay-stage"]');
+
+  function clearAiTurnTimeout() {
+    if (aiTurnTimeoutId !== null) {
+      globalThis.clearTimeout(aiTurnTimeoutId);
+      aiTurnTimeoutId = null;
+    }
+  }
 
   async function playTurnSequence(turnStartState, nextEngineState) {
     const action = nextEngineState.lastAction;
@@ -278,10 +287,31 @@ function renderGameScene(root, payload = {}) {
     renderFrame();
   }
 
+  async function performTurn() {
+    if (!engine || isAnimatingTurn) {
+      return;
+    }
+
+    const turnStartState = engine.getState();
+    if (turnStartState.gameOver || turnStartState.pendingEvent) {
+      return;
+    }
+
+    isAnimatingTurn = true;
+    const nextEngineState = await engine.takeTurn();
+    await playTurnSequence(turnStartState, nextEngineState);
+    isAnimatingTurn = false;
+    if (sceneState && !sceneState.gameOver && !sceneState.pendingEvent) {
+      renderFrame();
+    }
+  }
+
   function renderFrame() {
     if (!sceneState) {
       return;
     }
+
+    clearAiTurnTimeout();
 
     renderBoardRenderer(boardStage, { state: sceneState });
     renderAnimationLayer(boardStage, { state: sceneState });
@@ -320,10 +350,28 @@ function renderGameScene(root, payload = {}) {
 
     const rollButton = hudStage.querySelector('[data-role="roll-action"]');
     const isMotionPhase = Boolean(sceneState.animation?.phase && sceneState.animation.phase !== 'idle');
+    const currentPlayerIsAI = Boolean(sceneState.currentPlayer?.isAI);
+    const shouldDisableRoll = Boolean(
+      sceneState.gameOver
+      || pendingEvent
+      || isAnimatingTurn
+      || isMotionPhase
+      || currentPlayerIsAI,
+    );
+
     if (!rollButton || !engine || sceneState.gameOver || pendingEvent || isAnimatingTurn || isMotionPhase) {
       if (rollButton) {
-        rollButton.disabled = Boolean(sceneState.gameOver || pendingEvent || isAnimatingTurn || isMotionPhase);
+        rollButton.disabled = shouldDisableRoll;
       }
+      return;
+    }
+
+    if (currentPlayerIsAI) {
+      rollButton.disabled = true;
+      aiTurnTimeoutId = globalThis.setTimeout(() => {
+        aiTurnTimeoutId = null;
+        void performTurn();
+      }, AI_TURN_DELAY_MS);
       return;
     }
 
@@ -331,14 +379,7 @@ function renderGameScene(root, payload = {}) {
 
     rollButton.addEventListener('click', async () => {
       rollButton.disabled = true;
-      isAnimatingTurn = true;
-      const turnStartState = engine.getState();
-      const nextEngineState = await engine.takeTurn();
-      await playTurnSequence(turnStartState, nextEngineState);
-      isAnimatingTurn = false;
-      if (sceneState && !sceneState.gameOver && !sceneState.pendingEvent) {
-        renderFrame();
-      }
+      await performTurn();
     }, { once: true });
   }
 

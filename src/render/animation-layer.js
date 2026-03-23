@@ -1,6 +1,7 @@
 import { getCellMeta } from '../core/board-data.js';
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
+const LINK_PHASES = new Set(['rolling', 'moving', 'landing', 'result']);
 
 function getOrCreateCanvas(root) {
   let canvas = root.querySelector('[data-role="animation-canvas"]');
@@ -17,6 +18,13 @@ function toCanvasPoint(cell, width, height) {
   return {
     x: cell.x * width,
     y: cell.y * height,
+  };
+}
+
+function getDiceOrigin(width, height) {
+  return {
+    x: width - 108,
+    y: height - 108,
   };
 }
 
@@ -114,13 +122,56 @@ function drawLandingBurst(ctx, width, height, position, phase) {
   ctx.restore();
 }
 
+function drawDiceLink(ctx, width, height, animation = {}) {
+  if (!LINK_PHASES.has(animation?.phase)) {
+    return;
+  }
+
+  const cell = getCellMeta(animation?.activeCell);
+  if (!cell) {
+    return;
+  }
+
+  const origin = getDiceOrigin(width, height);
+  const point = toCanvasPoint(cell, width, height);
+  const distanceX = origin.x - point.x;
+  const controlX = origin.x - Math.max(120, Math.abs(distanceX) * 0.42);
+  const controlY = Math.min(origin.y, point.y) - (animation.phase === 'rolling' ? 130 : 88);
+
+  ctx.save();
+  const linkGradient = ctx.createLinearGradient(origin.x, origin.y, point.x, point.y);
+  linkGradient.addColorStop(0, 'rgba(255, 173, 101, 0.08)');
+  linkGradient.addColorStop(0.42, 'rgba(255, 255, 255, 0.34)');
+  linkGradient.addColorStop(1, animation.phase === 'rolling' ? 'rgba(255, 242, 177, 0.78)' : 'rgba(255, 239, 197, 0.58)');
+  ctx.strokeStyle = linkGradient;
+  ctx.lineWidth = animation.phase === 'rolling' ? 8 : 6;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash(animation.phase === 'rolling' ? [16, 14] : []);
+  ctx.beginPath();
+  ctx.moveTo(origin.x, origin.y);
+  ctx.quadraticCurveTo(controlX, controlY, point.x, point.y);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.fillStyle = animation.phase === 'rolling' ? 'rgba(255, 255, 255, 0.64)' : 'rgba(255, 246, 212, 0.42)';
+  [0.24, 0.5, 0.76].forEach((progress) => {
+    const inverse = 1 - progress;
+    const sparkX = inverse * inverse * origin.x + 2 * inverse * progress * controlX + progress * progress * point.x;
+    const sparkY = inverse * inverse * origin.y + 2 * inverse * progress * controlY + progress * progress * point.y;
+    ctx.beginPath();
+    ctx.arc(sparkX, sparkY, animation.phase === 'rolling' ? 3.4 : 2.6, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
 function drawDiceSpark(ctx, width, height, animation = {}) {
   if (animation?.phase !== 'rolling') {
     return;
   }
 
-  const x = width - 116;
-  const y = height - 118;
+  const { x, y } = getDiceOrigin(width, height);
   ctx.save();
   const glow = ctx.createRadialGradient(x, y, 8, x, y, 56);
   glow.addColorStop(0, 'rgba(255, 255, 255, 0.62)');
@@ -167,6 +218,7 @@ export function renderAnimationLayer(root, { state = {}, size = DEFAULT_SIZE } =
 
   ctx.clearRect(0, 0, size.width, size.height);
   drawVignette(ctx, size.width, size.height);
+  drawDiceLink(ctx, size.width, size.height, state.animation);
   drawTrailGlow(ctx, size.width, size.height, state.animation?.trail ?? []);
   drawDiceSpark(ctx, size.width, size.height, state.animation);
   drawPulse(ctx, size.width, size.height, state.animation?.activeCell ?? state.currentPlayer?.position ?? 1);

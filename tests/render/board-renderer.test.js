@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getPlayerBadgeText } from '../../src/core/players.js';
 import { renderBoardRenderer } from '../../src/render/board-renderer.js';
 
 describe('board renderer', () => {
@@ -60,11 +61,14 @@ describe('board renderer', () => {
     expect(root.querySelector('[data-player-chip="2"]')).not.toBeNull();
     expect(root.querySelector('[data-role="board-center-sign"]')).not.toBeNull();
     expect(root.querySelector('[data-role="board-finish-sparkles"]')).not.toBeNull();
-    expect(root.querySelector('[data-role="board-finish-banner"]')).not.toBeNull();
+    expect(root.querySelector('[data-role="board-finish-banner"]')).toBeNull();
     expect(root.querySelector('[data-player-chip="1"] .board-player-chip__ring')).not.toBeNull();
     expect(root.querySelector('[data-player-chip="1"] .board-player-chip__shadow')).not.toBeNull();
+    expect(root.querySelector('[data-player-chip="1"] .board-player-chip__badge')?.textContent).toBe(getPlayerBadgeText('你', 1));
+    expect(root.querySelector('[data-player-chip="2"] .board-player-chip__badge')?.textContent).toBe(getPlayerBadgeText('海盗1', 2));
     expect(root.querySelector('[data-board-sticker="wish-star"] .board-sticker__icon')).not.toBeNull();
     expect(root.querySelector('[data-board-sticker="bonus-roll"] .board-sticker__icon')).not.toBeNull();
+    expect(root.querySelector('[data-board-sticker="bonus-roll"]')?.getAttribute('title')).toContain('再掷一次');
     expect(root.querySelector('[data-cell-label="8"]')?.dataset.trail).toBe('true');
     expect(root.querySelector('[data-cell-label="11"]')?.dataset.active).toBe('true');
     expect(root.querySelector('[data-cell-label="11"]')?.dataset.landed).toBe('true');

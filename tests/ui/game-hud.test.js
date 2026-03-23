@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { getPlayerBadgeText } from '../../src/core/players.js';
 import { renderGameHud } from '../../src/ui/game-hud.js';
 
 describe('game HUD', () => {
-  it('renders a floating dice button with a persistent turn pill while the rest stays folded away', () => {
+  it('renders a floating dice button while surfacing the current player by name', () => {
     const root = document.createElement('div');
 
     renderGameHud(root, {
@@ -19,23 +20,28 @@ describe('game HUD', () => {
     });
 
     const drawer = root.querySelector('[data-role="hud-drawer"]');
+    const currentPlayerBanner = root.querySelector('[data-role="current-player-banner"]');
+    const soundToggle = root.querySelector('[data-role="sound-toggle"]');
     const turnPill = root.querySelector('[data-role="turn-pill"]');
 
     expect(root.textContent).toContain('小船长');
+    expect(root.textContent).toContain('第 4 回合');
     expect(root.querySelector('[data-role="roll-action"]')).not.toBeNull();
     expect(root.querySelector('[data-role="hud-toggle"]')).not.toBeNull();
     expect(turnPill).not.toBeNull();
-    expect(turnPill?.textContent).toContain('4');
     expect(turnPill?.textContent).toContain('小船长');
+    expect(root.querySelector('.hud-mini__current-badge')?.textContent).toBe(getPlayerBadgeText('小船长', 1));
+    expect(root.querySelector('.hud-legend__badge')?.textContent).toBe(getPlayerBadgeText('小船长', 1));
     expect(drawer).not.toBeNull();
     expect(drawer?.hasAttribute('open')).toBe(false);
-    expect(drawer?.contains(turnPill)).toBe(false);
+    expect(currentPlayerBanner).not.toBeNull();
+    expect(currentPlayerBanner?.contains(soundToggle)).toBe(true);
     expect(drawer?.contains(root.querySelector('[data-role="current-player-banner"]'))).toBe(true);
     expect(drawer?.contains(root.querySelector('[data-role="player-legend"]'))).toBe(true);
     expect(drawer?.contains(root.querySelector('[data-role="event-note"]'))).toBe(true);
     expect(root.querySelector('[data-role="zone-objective-card"]')).toBeNull();
     expect(root.querySelector('[data-role="crew-strip"]')).toBeNull();
-    expect(root.querySelector('[data-role="sound-toggle"]')).not.toBeNull();
+    expect(soundToggle).not.toBeNull();
   });
 
   it('shows a rolling dice state with the live face value while a turn animation is playing', () => {
