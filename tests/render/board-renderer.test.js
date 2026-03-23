@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderBoardRenderer } from '../../src/render/board-renderer.js';
 
 describe('board renderer', () => {
-  it('renders visible board numbers on a widescreen board with numbered player chips', () => {
+  it('renders a playful board with decorated event stickers, finish stage details, and layered player chips', () => {
     const root = document.createElement('div');
     root.style.position = 'relative';
     HTMLCanvasElement.prototype.getContext = () => ({
@@ -52,6 +52,12 @@ describe('board renderer', () => {
     expect(root.querySelector('[data-player-chip="1"]')).not.toBeNull();
     expect(root.querySelector('[data-player-chip="2"]')).not.toBeNull();
     expect(root.querySelector('[data-role="board-center-sign"]')).not.toBeNull();
+    expect(root.querySelector('[data-role="board-finish-sparkles"]')).not.toBeNull();
+    expect(root.querySelector('[data-role="board-finish-banner"]')).not.toBeNull();
+    expect(root.querySelector('[data-player-chip="1"] .board-player-chip__ring')).not.toBeNull();
+    expect(root.querySelector('[data-player-chip="1"] .board-player-chip__shadow')).not.toBeNull();
+    expect(root.querySelector('[data-board-sticker="wish-star"] .board-sticker__icon')).not.toBeNull();
+    expect(root.querySelector('[data-board-sticker="bonus-roll"] .board-sticker__icon')).not.toBeNull();
     expect(root.querySelectorAll('[data-board-sticker]').length).toBeGreaterThan(3);
   });
 });

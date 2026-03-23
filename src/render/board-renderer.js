@@ -1,6 +1,17 @@
 import { boardPath, boardStickers, getCellMeta } from '../core/board-data.js';
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
+const STICKER_ICONS = {
+  star: '⭐',
+  dice: '🎲',
+  gem: '💎',
+  octopus: '🐙',
+  shark: '🦈',
+  bridge: '🌉',
+  swirl: '🌀',
+  pirate: '🏴‍☠️',
+  ladder: '🪜',
+};
 
 function getOrCreateCanvas(root) {
   let canvas = root.querySelector('[data-role="board-canvas"]');
@@ -28,10 +39,16 @@ function getOrCreateLayer(root, role, className) {
 
 function drawBoardWater(ctx, width, height) {
   const seaGradient = ctx.createLinearGradient(0, 0, 0, height);
-  seaGradient.addColorStop(0, '#7fc4ef');
-  seaGradient.addColorStop(0.42, '#7bc1ee');
-  seaGradient.addColorStop(1, '#96d6f7');
+  seaGradient.addColorStop(0, '#73c8ff');
+  seaGradient.addColorStop(0.42, '#68c2ff');
+  seaGradient.addColorStop(1, '#9be8ff');
   ctx.fillStyle = seaGradient;
+  ctx.fillRect(0, 0, width, height);
+
+  const horizonGlow = ctx.createRadialGradient(width * 0.5, height * 0.26, 30, width * 0.5, height * 0.26, width * 0.46);
+  horizonGlow.addColorStop(0, 'rgba(255, 250, 214, 0.42)');
+  horizonGlow.addColorStop(1, 'rgba(255, 250, 214, 0)');
+  ctx.fillStyle = horizonGlow;
   ctx.fillRect(0, 0, width, height);
 
   ctx.save();
@@ -59,14 +76,47 @@ function drawBoardWater(ctx, width, height) {
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, width, height);
   ctx.restore();
+
+  ctx.save();
+  const confettiColors = ['rgba(255, 241, 120, 0.44)', 'rgba(255, 126, 120, 0.28)', 'rgba(121, 212, 255, 0.32)'];
+  for (let index = 0; index < 18; index += 1) {
+    ctx.fillStyle = confettiColors[index % confettiColors.length];
+    const x = width * (0.06 + ((index * 0.051) % 0.88));
+    const y = height * (0.1 + ((index * 0.083) % 0.78));
+    ctx.beginPath();
+    ctx.arc(x, y, 3 + (index % 3), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function drawRouteGuideline(ctx, width, height) {
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.setLineDash([12, 18]);
-  ctx.strokeStyle = 'rgba(255, 247, 218, 0.56)';
+  ctx.setLineDash([10, 16]);
+  ctx.strokeStyle = 'rgba(255, 249, 205, 0.22)';
+  ctx.lineWidth = 18;
+  ctx.beginPath();
+  boardPath
+    .filter(({ index }) => index !== 100)
+    .forEach((cell, index) => {
+      const pointX = cell.x * width;
+      const pointY = cell.y * height;
+      if (index === 0) {
+        ctx.moveTo(pointX, pointY);
+      } else {
+        ctx.lineTo(pointX, pointY);
+      }
+    });
+  ctx.stroke();
+
+  const lineGradient = ctx.createLinearGradient(0, height * 0.84, width, height * 0.16);
+  lineGradient.addColorStop(0, 'rgba(255, 239, 177, 0.88)');
+  lineGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)');
+  lineGradient.addColorStop(1, 'rgba(192, 247, 255, 0.92)');
+  ctx.setLineDash([8, 14]);
+  ctx.strokeStyle = lineGradient;
   ctx.lineWidth = 8;
   ctx.beginPath();
   boardPath
@@ -83,8 +133,8 @@ function drawRouteGuideline(ctx, width, height) {
   ctx.stroke();
 
   ctx.setLineDash([]);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.38)';
+  ctx.lineWidth = 2.8;
   ctx.beginPath();
   boardPath
     .filter(({ index }) => index !== 100)
@@ -136,13 +186,17 @@ function drawCenterIsland(ctx, width, height) {
   const centerY = height * 0.48;
 
   ctx.save();
-  const islandGlow = ctx.createRadialGradient(centerX, centerY + 40, 30, centerX, centerY + 40, 220);
-  islandGlow.addColorStop(0, 'rgba(255, 236, 166, 0.85)');
+  const islandGlow = ctx.createRadialGradient(centerX, centerY + 30, 30, centerX, centerY + 30, 250);
+  islandGlow.addColorStop(0, 'rgba(255, 236, 166, 0.94)');
+  islandGlow.addColorStop(0.46, 'rgba(255, 211, 120, 0.26)');
   islandGlow.addColorStop(1, 'rgba(255, 236, 166, 0)');
   ctx.fillStyle = islandGlow;
   ctx.fillRect(centerX - 260, centerY - 170, 520, 340);
 
-  ctx.fillStyle = '#ecd28c';
+  const stageGradient = ctx.createLinearGradient(centerX, centerY - 40, centerX, centerY + 140);
+  stageGradient.addColorStop(0, '#ffe88c');
+  stageGradient.addColorStop(1, '#f7cc6c');
+  ctx.fillStyle = stageGradient;
   ctx.beginPath();
   ctx.ellipse(centerX, centerY + 46, 220, 104, -0.04, 0, Math.PI * 2);
   ctx.fill();
@@ -159,6 +213,12 @@ function drawCenterIsland(ctx, width, height) {
   drawPalmTree(ctx, centerX - 30, centerY + 46, 0.94);
   drawPalmTree(ctx, centerX + 84, centerY + 34, 0.84);
 
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.lineWidth = 12;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY + 44, 160, Math.PI * 0.18, Math.PI * 0.82);
+  ctx.stroke();
+
   ctx.fillStyle = '#f5d14e';
   for (let index = 0; index < 22; index += 1) {
     const angle = (Math.PI * 2 * index) / 18;
@@ -172,6 +232,18 @@ function drawCenterIsland(ctx, width, height) {
       0,
       Math.PI * 2,
     );
+    ctx.fill();
+  }
+
+  ctx.fillStyle = '#ff7f66';
+  for (let index = 0; index < 10; index += 1) {
+    const x = centerX - 152 + index * 34;
+    const heightOffset = index % 2 === 0 ? 18 : 6;
+    ctx.beginPath();
+    ctx.moveTo(x, centerY - 30);
+    ctx.lineTo(x + 16, centerY - 54 - heightOffset);
+    ctx.lineTo(x + 16, centerY - 22);
+    ctx.closePath();
     ctx.fill();
   }
 
@@ -194,6 +266,11 @@ function drawCenterIsland(ctx, width, height) {
 
   ctx.fillStyle = '#f4d04b';
   ctx.fillRect(centerX - 9, centerY + 24, 18, 18);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+  ctx.beginPath();
+  ctx.arc(centerX - 20, centerY + 10, 18, 0, Math.PI * 2);
+  ctx.fill();
 
   ctx.restore();
 }
@@ -245,6 +322,7 @@ function renderBoardStickers(root) {
         data-board-sticker="${sticker.id}"
         style="left:${(sticker.x * 100).toFixed(2)}%;top:${(sticker.y * 100).toFixed(2)}%;--sticker-rotation:${sticker.rotation}deg;"
       >
+        <span class="board-sticker__icon" aria-hidden="true">${STICKER_ICONS[sticker.style] ?? '✨'}</span>
         <span class="board-sticker__title">${sticker.text}</span>
         <span class="board-sticker__detail">${sticker.detail}</span>
       </div>
@@ -264,6 +342,12 @@ function renderCenterSign(root) {
 
   centerLayer.innerHTML = `
     <div class="board-center-sign" data-role="board-center-sign" data-cell-label="100">
+      <div class="board-center-sign__sparkles" data-role="board-finish-sparkles" aria-hidden="true">
+        <span>✨</span>
+        <span>🎉</span>
+        <span>✨</span>
+      </div>
+      <span class="board-center-sign__banner" data-role="board-finish-banner">宝藏乐园</span>
       <span class="board-center-sign__flag">终点</span>
       <span class="board-center-sign__value">100</span>
     </div>
@@ -298,6 +382,8 @@ function renderPlayerChips(root, state = {}) {
           style="left:calc(${(cell.x * 100).toFixed(2)}% + ${stackColumn}px);top:calc(${(cell.y * 100).toFixed(2)}% - ${24 + stackRow}px);--chip-color:${player.color ?? '#ff6b6b'};"
           title="${index + 1}号 ${player.name}"
         >
+          <span class="board-player-chip__shadow" aria-hidden="true"></span>
+          <span class="board-player-chip__ring" aria-hidden="true"></span>
           <span class="board-player-chip__badge">${index + 1}</span>
         </div>
       `;
