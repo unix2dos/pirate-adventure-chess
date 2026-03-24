@@ -114,18 +114,11 @@
 
 .game-scene[data-layout="mobile-portrait"] {
   --scene-padding: 0.55rem;
-  --hud-dock-height: 8.35rem;
-}
-
-.game-scene[data-layout="mobile-portrait"] .game-layout {
-  place-items: stretch center;
-  align-content: space-between;
 }
 
 .game-scene[data-layout="mobile-portrait"] .game-stage {
   width: 100%;
-  gap: 0.8rem;
-  justify-items: stretch;
+  justify-items: center;
 }
 
 .game-scene[data-layout="mobile-portrait"] .board-stage-shell {
@@ -136,10 +129,10 @@
 }
 
 .game-scene[data-layout="mobile-portrait"] .hud-stage-shell {
-  position: static;
-  inset: auto;
-  width: 100%;
-  pointer-events: auto;
+  position: absolute;
+  inset: 0;
+  width: auto;
+  pointer-events: none;
 }
 
 @media (max-width: 980px) {

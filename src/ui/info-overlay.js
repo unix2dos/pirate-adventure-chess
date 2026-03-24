@@ -14,6 +14,7 @@ function normalizeLayout(layout = 'anchored') {
 export function renderInfoOverlay(root, { detail = {}, layout = 'anchored', anchor = null, onClose }) {
   const normalizedLayout = normalizeLayout(layout);
   const isDialogLayout = normalizedLayout !== 'anchored';
+  const effectText = detail.effectText ?? '暂无效果说明';
 
   root.innerHTML = `
     <section
@@ -22,7 +23,11 @@ export function renderInfoOverlay(root, { detail = {}, layout = 'anchored', anch
       data-layout="${normalizedLayout}"
       ${isDialogLayout ? 'role="dialog" aria-modal="true"' : ''}
     >
-      <article class="info-overlay__card" style="${normalizedLayout === 'anchored' ? readAnchorStyle(anchor) : ''}">
+      <article
+        data-role="info-overlay-card"
+        class="info-overlay__card info-overlay__card--effect"
+        style="${normalizedLayout === 'anchored' ? readAnchorStyle(anchor) : ''}"
+      >
         <button
           class="info-overlay__close"
           data-role="close-info-overlay"
@@ -31,17 +36,17 @@ export function renderInfoOverlay(root, { detail = {}, layout = 'anchored', anch
         >
           ×
         </button>
-        <span class="scene-caption">${detail.eyebrow ?? '规则说明'}</span>
-        <div class="stack" style="margin-top:0.9rem;">
-          <h2 class="overlay-title">${detail.title ?? '说明'}</h2>
-          ${detail.cell ? `<p class="overlay-copy"><strong>格子：</strong>第 ${detail.cell} 格</p>` : ''}
-          ${detail.trigger ? `<p class="overlay-copy"><strong>触发：</strong>${detail.trigger}</p>` : ''}
-          ${detail.effectText ? `<p class="overlay-copy"><strong>效果：</strong>${detail.effectText}</p>` : ''}
-          ${detail.example ? `<p class="overlay-copy"><strong>例如：</strong>${detail.example}</p>` : ''}
-        </div>
+        <p class="overlay-copy"><strong>效果：</strong>${effectText}</p>
       </article>
     </section>
   `;
+
+  root.querySelector('[data-role="info-overlay"]')?.addEventListener('click', (event) => {
+    const overlay = event.currentTarget;
+    if (event.target === overlay) {
+      onClose?.();
+    }
+  });
 
   root.querySelector('[data-role="close-info-overlay"]')?.addEventListener('click', () => {
     onClose?.();

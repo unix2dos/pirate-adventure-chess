@@ -35,11 +35,21 @@ describe('board data', () => {
     expect(boardPath.every(({ rotation }) => rotation <= 90 && rotation >= -90)).toBe(true);
   });
 
-  it('keeps every visible sticker aligned with a real event cell, including the wish star card', () => {
+  it('keeps every visible sticker aligned with a real event cell, including expanded prop stages', () => {
     expect(resolveBoardEvent(13)).toBeNull();
     expect(resolveBoardEvent(14)?.title).toBe('许愿星');
-    expect(boardStickers).toHaveLength(10);
+    expect(resolveBoardEvent(92)?.title).toBeTruthy();
+    expect(boardStickers.length).toBeGreaterThanOrEqual(20);
     expect(boardStickers.every((sticker) => resolveBoardEvent(sticker.cell))).toBe(true);
+  });
+
+  it('spreads expanded prop stages across mid and late game cells', () => {
+    const eventCells = boardStickers.map((sticker) => sticker.cell);
+    const midGameCount = eventCells.filter((cell) => cell >= 45 && cell <= 74).length;
+    const lateGameCount = eventCells.filter((cell) => cell >= 75 && cell <= 96).length;
+
+    expect(midGameCount).toBeGreaterThanOrEqual(6);
+    expect(lateGameCount).toBeGreaterThanOrEqual(5);
   });
 
   it('keeps the last route around the island readable instead of collapsing into a sprint cluster', () => {

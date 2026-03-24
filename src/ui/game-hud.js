@@ -15,6 +15,7 @@ export function renderGameHud(root, { state, layout = { mode: 'desktop' } }) {
   const currentPlayer = state.currentPlayer ?? { id: 'crew-1', name: '待命船员', color: '#ff6b6b' };
   const crew = Array.isArray(state.crew) && state.crew.length > 0 ? state.crew : [currentPlayer];
   const layoutMode = layout?.mode ?? 'desktop';
+  const hudDensity = layoutMode === 'mobile-portrait' ? 'compact' : 'default';
   const recentEventTitle = state.recentEvent?.title ?? '准备出航';
   const recentRolls = Array.isArray(state.recentRolls) ? state.recentRolls : [];
   const turnLabel = typeof state.turnNumber === 'number' ? `第 ${state.turnNumber} 回合` : '冒险进行中';
@@ -51,7 +52,7 @@ export function renderGameHud(root, { state, layout = { mode: 'desktop' } }) {
     <div aria-live="polite" class="sr-only">
       最近掷骰：${rollSummaryLabel}。轮到 ${currentPlayer.name}。${turnLabel}。${actionTitle}。${recentEventTitle}
     </div>
-    <aside data-scene="game-hud" class="hud-float" data-layout="${layoutMode}">
+    <aside data-scene="game-hud" class="hud-float" data-layout="${layoutMode}" data-density="${hudDensity}">
       <div class="hud-turn-pill" data-role="turn-pill" style="--current-player:${currentPlayer.color};">
         <span class="hud-turn-pill__avatar">${currentPlayerBadge}</span>
         <span class="hud-turn-pill__stack">
@@ -61,7 +62,7 @@ export function renderGameHud(root, { state, layout = { mode: 'desktop' } }) {
         </span>
       </div>
 
-      <div class="hud-primary-bar" data-role="hud-primary-bar">
+      <div class="hud-primary-bar" data-role="hud-primary-bar" data-attach="top">
         <details class="hud-drawer" data-role="hud-drawer">
           <summary class="hud-drawer__toggle" data-role="hud-toggle">
             设置

@@ -88,7 +88,7 @@ describe('game HUD', () => {
     expect(root.querySelector('[data-role="turn-pill"]')?.textContent).toContain('第 1 回合');
   });
 
-  it('renders a compact bottom action bar for portrait mobile layouts', () => {
+  it('keeps portrait mobile controls attached on top of the board instead of docking a bottom bar', () => {
     const root = document.createElement('div');
 
     renderGameHud(root, {
@@ -106,10 +106,14 @@ describe('game HUD', () => {
 
     const hudRoot = root.querySelector('[data-scene="game-hud"]');
     const primaryBar = root.querySelector('[data-role="hud-primary-bar"]');
+    const settingsDrawer = root.querySelector('[data-role="hud-drawer"]');
+    const rollAction = root.querySelector('[data-role="roll-action"]');
 
     expect(hudRoot?.dataset.layout).toBe('mobile-portrait');
+    expect(hudRoot?.dataset.density).toBe('compact');
     expect(primaryBar).not.toBeNull();
-    expect(primaryBar?.contains(root.querySelector('[data-role="hud-drawer"]'))).toBe(true);
-    expect(primaryBar?.contains(root.querySelector('[data-role="roll-action"]'))).toBe(true);
+    expect(primaryBar?.dataset.attach).toBe('top');
+    expect(primaryBar?.contains(settingsDrawer)).toBe(true);
+    expect(primaryBar?.contains(rollAction)).toBe(true);
   });
 });

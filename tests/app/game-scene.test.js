@@ -54,10 +54,12 @@ describe('game scene interactions', () => {
     root.querySelector('[data-role="start-adventure"]').click();
     root.querySelector('[data-board-sticker="bonus-roll"]').click();
 
-    expect(root.querySelector('[data-role="info-overlay"]')).not.toBeNull();
-    expect(root.textContent).toContain('幸运骰');
-    expect(root.textContent).toContain('第 27 格');
-    expect(root.textContent).toContain('再掷一次');
+    const overlay = root.querySelector('[data-role="info-overlay"]');
+    const overlayText = overlay?.textContent ?? '';
+
+    expect(overlay).not.toBeNull();
+    expect(overlayText).toContain('效果：处理完本格后，仍然轮到你继续掷骰');
+    expect(overlayText).not.toContain('第 27 格');
   });
 
   it('opens a help overlay from the settings drawer and can restart back to the start scene', async () => {
@@ -70,9 +72,13 @@ describe('game scene interactions', () => {
     root.querySelector('[data-role="start-adventure"]').click();
     root.querySelector('[data-role="help-action"]').click();
 
-    expect(root.querySelector('[data-role="info-overlay"]')).not.toBeNull();
-    expect(root.textContent).toContain('规则说明');
-    expect(root.textContent).toContain('点击挂卡');
+    const overlay = root.querySelector('[data-role="info-overlay"]');
+    const overlayText = overlay?.textContent ?? '';
+
+    expect(overlay).not.toBeNull();
+    expect(overlayText).toContain('效果：');
+    expect(overlayText).not.toContain('规则说明');
+    expect(overlayText).not.toContain('点击挂卡');
 
     root.querySelector('[data-role="restart-action"]').click();
 
