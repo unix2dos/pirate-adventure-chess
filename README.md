@@ -64,6 +64,26 @@ npm run build
 npm test
 ```
 
+## Cloudflare Pages Auto Deploy
+
+仓库现在包含了 [`.github/workflows/deploy-cloudflare-pages.yml`](.github/workflows/deploy-cloudflare-pages.yml)，推送到 `main` 会触发一次 Cloudflare Pages 部署。
+
+要让它真正生效，还需要在 GitHub 仓库里补这两个 `Actions secrets`：
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
+推荐在 Cloudflare 中先创建一个 Pages 项目，项目名用 `pirate-adventure-chess`。  
+如果你已经有现成项目，但名字不同，把 workflow 里的 `CLOUDFLARE_PAGES_PROJECT_NAME` 改成实际项目名即可。
+
+最短接线步骤：
+
+```text
+1. Cloudflare Dashboard -> Workers & Pages -> Create application -> Pages -> 先创建项目
+2. GitHub Repo -> Settings -> Secrets and variables -> Actions -> 新增上面的两个 secrets
+3. push 到 main，GitHub Actions 会自动 build 并部署 dist/ 到 Cloudflare Pages
+```
+
 ## Design Direction
 
 这版的设计目标不是“网页上的功能样机”，而是：
