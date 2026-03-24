@@ -226,7 +226,7 @@ const BOARD_EVENTS = [
     cell: 31,
     emoji: '💨',
     style: 'dice',
-    title: '急流道',
+    title: '幸运骰',
     detail: '再掷一次',
     description: '你进入急流主通道，本回合可再次掷骰。',
     trigger: '落到第 31 格时触发',
@@ -243,7 +243,7 @@ const BOARD_EVENTS = [
     cell: 41,
     emoji: '🐚',
     style: 'gem',
-    title: '贝壳祝福',
+    title: '宝石礁',
     detail: '下回合 +1',
     description: '拾到发光贝壳，下回合会更顺。',
     trigger: '落到第 41 格时触发',
@@ -260,7 +260,7 @@ const BOARD_EVENTS = [
     cell: 49,
     emoji: '🌫️',
     style: 'swirl',
-    title: '迷雾区',
+    title: '章鱼海怪',
     detail: '暂停一回合',
     description: '迷雾遮住航路，下一轮需要停船观察。',
     trigger: '落到第 49 格时触发',
@@ -270,6 +270,23 @@ const BOARD_EVENTS = [
     offsetY: -0.05,
     rotation: -6,
     effect: { type: 'skip-turns', turns: 1 },
+  },
+  {
+    id: 'SWAP_TIDE',
+    stickerId: 'swap-tide',
+    cell: 52,
+    emoji: '🔁',
+    style: 'pirate',
+    title: '换位海流',
+    detail: '互相换位',
+    description: '诡异海流把你和目标船只的位置对调。',
+    trigger: '落到第 52 格时触发',
+    effectText: '与当前领先的其他玩家互相换位',
+    example: '例如你在第 52 格，领先对手在第 80 格，你们会直接互换位置。',
+    offsetX: 0.04,
+    offsetY: -0.07,
+    rotation: -4,
+    effect: { type: 'swap-position' },
   },
   {
     id: 'EAST_BRIDGE',
@@ -324,6 +341,23 @@ const BOARD_EVENTS = [
       { label: '立刻前进 3 格', value: { type: 'move', steps: 3 } },
       { label: '下回合 +2 步', value: { type: 'roll-modifier', amount: 2 } },
     ],
+  },
+  {
+    id: 'TIDE_WAGER',
+    stickerId: 'tide-wager',
+    cell: 70,
+    emoji: '🎯',
+    style: 'dice',
+    title: '押注潮汐',
+    detail: '奇+3 / 偶-2',
+    description: '你押注潮汐方向，再掷一次判定是顺风还是逆流。',
+    trigger: '落到第 70 格时触发',
+    effectText: '额外掷一次：奇数前进 3 格，偶数后退 2 格',
+    example: '例如判定掷出 5，就前进 3；掷出 4，就后退 2。',
+    offsetX: -0.07,
+    offsetY: -0.04,
+    rotation: 6,
+    effect: { type: 'parity-roll', oddSteps: 3, evenSteps: -2 },
   },
   {
     id: 'CLIFF_LADDER',
@@ -418,6 +452,8 @@ function describeEffect(event, effect) {
           ? `${event.title}让你下回合多走 ${effect.amount} 格`
           : `${event.title}让你下回合少走 ${Math.abs(effect.amount)} 格`,
       };
+    case 'swap-position':
+      return { title: `${event.title}触发互相换位` };
     default:
       return { title: event.title };
   }
@@ -440,7 +476,7 @@ function normalizeSelectedEffect(event, choiceValue) {
   return null;
 }
 
-function applyEffect(player, effect) {
+function applyEffect(player, effect, context = {}) {
   if (!player || !effect) {
     return;
   }
@@ -461,6 +497,19 @@ function applyEffect(player, effect) {
     case 'roll-modifier':
       player.rollModifier = (player.rollModifier ?? 0) + (effect.amount ?? 0);
       break;
+    case 'swap-position': {
+      const players = Array.isArray(context.players) ? context.players : [];
+      const target = players
+        .filter((item) => item && item.id !== player.id)
+        .sort((left, right) => right.position - left.position)[0];
+      if (!target) {
+        break;
+      }
+      const current = player.position;
+      player.position = clampPosition(target.position);
+      target.position = clampPosition(current);
+      break;
+    }
     default:
       break;
   }
@@ -491,13 +540,13 @@ export function getBoardEventById(eventId) {
   return cloneEvent(BOARD_EVENTS.find(({ id, stickerId }) => id === eventId || stickerId === eventId) ?? NO_EVENT);
 }
 
-export function applyBoardEvent({ player, event, choiceValue }) {
+export function applyBoardEvent({ player, players, event, choiceValue }) {
   if (!player || !event) {
     return null;
   }
 
   const effect = normalizeSelectedEffect(event, choiceValue);
-  applyEffect(player, effect);
+  applyEffect(player, effect, { players });
 
   return describeEffect(event, effect);
 }

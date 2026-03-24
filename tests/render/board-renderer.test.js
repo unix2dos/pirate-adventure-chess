@@ -4,7 +4,7 @@ import { getPlayerBadgeText } from '../../src/core/players.js';
 import { renderBoardRenderer } from '../../src/render/board-renderer.js';
 
 describe('board renderer', () => {
-  it('renders a playful board with decorated event stickers, finish stage details, and layered player chips', () => {
+  it('renders prop cells with names and visual emphasis while keeping sticker layer disabled', () => {
     const root = document.createElement('div');
     root.style.position = 'relative';
     HTMLCanvasElement.prototype.getContext = () => ({
@@ -67,14 +67,15 @@ describe('board renderer', () => {
     expect(root.querySelector('[data-player-chip="1"] .board-player-chip__shadow')).not.toBeNull();
     expect(root.querySelector('[data-player-chip="1"] .board-player-chip__badge')?.textContent).toBe(getPlayerBadgeText('你', 1));
     expect(root.querySelector('[data-player-chip="2"] .board-player-chip__badge')?.textContent).toBe(getPlayerBadgeText('海盗1', 2));
-    expect(root.querySelector('[data-board-sticker="wish-star"] .board-sticker__icon')).not.toBeNull();
-    expect(root.querySelector('[data-board-sticker="bonus-roll"] .board-sticker__icon')).not.toBeNull();
-    expect(root.querySelector('[data-board-sticker="bonus-roll"]')?.getAttribute('title')).toContain('第 27 格');
-    expect(root.querySelector('[data-board-sticker="bonus-roll"]')?.getAttribute('title')).toContain('再掷一次');
-    expect(root.querySelector('[data-board-sticker-link="wish-star"]')).not.toBeNull();
-    expect(root.querySelector('[data-board-sticker-link="bonus-roll"]')).not.toBeNull();
+    expect(root.querySelector('[data-board-sticker="wish-star"]')).toBeNull();
+    expect(root.querySelector('[data-board-sticker-link="wish-star"]')).toBeNull();
+    expect(root.querySelector('[data-board-sticker-layer]')?.textContent ?? '').toBe('');
     expect(root.querySelector('[data-cell-label="27"]')?.dataset.landmarkStyle).toBe('dice');
+    expect(root.querySelector('[data-cell-label="27"]')?.dataset.cellKind).toBe('landmark');
+    expect(root.querySelector('[data-cell-label="27"]')?.textContent).toContain('幸运骰');
+    expect(root.querySelector('[data-cell-label="27"]')?.textContent).not.toContain('27');
     expect(root.querySelector('[data-cell-label="46"]')?.dataset.landmarkStyle).toBe('octopus');
+    expect(root.querySelector('[data-cell-label="46"]')?.textContent).toContain('章鱼海怪');
     expect(root.querySelector('[data-cell-label="60"]')?.dataset.landmarkStyle).toBe('bridge');
     expect(root.querySelector('[data-cell-label="27"]')?.className).toContain('board-cell-label--landmark-dice');
     expect(root.querySelector('[data-cell-label="46"]')?.className).toContain('board-cell-label--landmark-octopus');
@@ -87,7 +88,7 @@ describe('board renderer', () => {
     expect(root.querySelector('[data-cell-label="11"]')?.dataset.active).toBe('true');
     expect(root.querySelector('[data-cell-label="11"]')?.dataset.landed).toBe('true');
     expect(root.querySelector('[data-player-chip="1"]')?.dataset.motion).toBe('moving');
-    expect(root.querySelectorAll('[data-board-sticker]').length).toBeGreaterThan(3);
+    expect(root.querySelectorAll('[data-board-sticker]').length).toBe(0);
   });
 
   it('lifts the center island so the sand stage stays centered inside the inner route', () => {

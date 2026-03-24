@@ -161,4 +161,40 @@ describe('game engine', () => {
       to: 40,
     });
   });
+
+  it('swaps positions mutually when landing on the swap tide event cell', async () => {
+    const engine = createGameEngine({
+      players: [
+        { id: 'crew-1', name: 'A', position: 51, skipTurns: 0, turtleBuff: 0, isAI: false },
+        { id: 'crew-2', name: 'B', position: 20, skipTurns: 0, turtleBuff: 0, isAI: false },
+      ],
+      rollDice: () => 1,
+    });
+
+    const stateAfterTurn = await engine.takeTurn();
+
+    expect(stateAfterTurn.players[0].position).toBe(20);
+    expect(stateAfterTurn.players[1].position).toBe(52);
+    expect(stateAfterTurn.recentEvent?.title).toContain('互相换位');
+  });
+
+  it('applies parity wager effect with odd roll +3 and even roll -2', async () => {
+    const oddRolls = [1, 5];
+    const oddEngine = createGameEngine({
+      players: [{ id: 'crew-1', name: 'A', position: 69, skipTurns: 0, turtleBuff: 0, isAI: false }],
+      rollDice: () => oddRolls.shift(),
+    });
+    const oddOutcomeState = await oddEngine.takeTurn();
+    expect(oddOutcomeState.players[0].position).toBe(73);
+    expect(oddOutcomeState.recentEvent?.title).toContain('奇数');
+
+    const evenRolls = [1, 4];
+    const evenEngine = createGameEngine({
+      players: [{ id: 'crew-1', name: 'A', position: 69, skipTurns: 0, turtleBuff: 0, isAI: false }],
+      rollDice: () => evenRolls.shift(),
+    });
+    const evenOutcomeState = await evenEngine.takeTurn();
+    expect(evenOutcomeState.players[0].position).toBe(68);
+    expect(evenOutcomeState.recentEvent?.title).toContain('偶数');
+  });
 });

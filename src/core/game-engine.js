@@ -56,6 +56,27 @@ export function createGameEngine({ players, rollDice }) {
     }
   }
 
+  async function applyParityRollEvent(player, boardEvent) {
+    const effect = boardEvent?.effect ?? {};
+    const oddSteps = Number.isFinite(effect.oddSteps) ? effect.oddSteps : 3;
+    const evenSteps = Number.isFinite(effect.evenSteps) ? effect.evenSteps : -2;
+    const judgeRoll = await Promise.resolve(rollDice());
+    const isOdd = Number(judgeRoll) % 2 === 1;
+    const delta = isOdd ? oddSteps : evenSteps;
+    const nextPosition = Math.min(100, Math.max(1, player.position + delta));
+    const from = player.position;
+    player.position = nextPosition;
+    return {
+      outcome: {
+        title: isOdd
+          ? `${boardEvent.title}判定奇数，前进${oddSteps}格`
+          : `${boardEvent.title}判定偶数，后退${Math.abs(evenSteps)}格`,
+      },
+      trail: createTrail(from, nextPosition),
+      judgeRoll,
+    };
+  }
+
   async function takeTurn() {
     if (state.gameOver || state.pendingEvent) {
       return getState();
@@ -125,8 +146,30 @@ export function createGameEngine({ players, rollDice }) {
     }
 
     if (boardEvent) {
+      if (boardEvent.effect?.type === 'parity-roll') {
+        const parityResult = await applyParityRollEvent(player, boardEvent);
+        state.recentEvent = parityResult.outcome;
+        state.lastAction = {
+          ...state.lastAction,
+          landedEventId: boardEvent.id,
+          eventId: boardEvent.id,
+          eventTrail: parityResult.trail,
+          eventRoll: parityResult.judgeRoll,
+          to: player.position,
+          trail: createTrail(from, player.position),
+        };
+        if (player.position >= 100) {
+          state.gameOver = true;
+          state.recentEvent = { title: '宝藏到手，冲线成功' };
+          return getState();
+        }
+        advanceTurn();
+        return getState();
+      }
+
       const outcome = applyBoardEvent({
         player,
+        players: state.players,
         event: boardEvent,
       });
 
@@ -154,6 +197,7 @@ export function createGameEngine({ players, rollDice }) {
     const from = player.position;
     const outcome = applyBoardEvent({
       player,
+      players: state.players,
       event: pendingEvent.event,
       choiceValue,
     });

@@ -22,6 +22,27 @@ const CHIP_CLUSTER_LAYOUTS = {
 };
 const INNER_RING_START = 82;
 const INNER_RING_END = 99;
+const PROP_SHORT_NAMES = new Map(
+  boardStickers.map((sticker) => [sticker.cell, sticker.text]),
+);
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function projectPathPoint(cell) {
+  const dx = cell.x - INNER_RING_CENTER.x;
+  const dy = cell.y - INNER_RING_CENTER.y;
+  const distance = Math.hypot(dx, dy);
+  const radialScale = distance > 0.34 ? 1.12 : distance > 0.23 ? 1.05 : 0.9;
+  const projectedX = INNER_RING_CENTER.x + dx * radialScale;
+  const projectedY = INNER_RING_CENTER.y + dy * radialScale;
+
+  return {
+    x: clamp(projectedX, 0.04, 0.96),
+    y: clamp(projectedY, 0.05, 0.95),
+  };
+}
 
 function getOrCreateCanvas(root) {
   let canvas = root.querySelector('[data-role="board-canvas"]');
@@ -81,6 +102,11 @@ function getInnerRingCenter() {
 }
 
 const INNER_RING_CENTER = getInnerRingCenter();
+const DISPLAY_PATH = boardPath.map((cell) => {
+  const projected = projectPathPoint(cell);
+  return { ...cell, ...projected };
+});
+const DISPLAY_PATH_BY_INDEX = new Map(DISPLAY_PATH.map((cell) => [cell.index, cell]));
 
 function drawBoardWater(ctx, width, height) {
   const seaGradient = ctx.createLinearGradient(0, 0, 0, height);
@@ -143,7 +169,7 @@ function drawRouteGuideline(ctx, width, height) {
   ctx.strokeStyle = 'rgba(255, 249, 205, 0.22)';
   ctx.lineWidth = 18;
   ctx.beginPath();
-  boardPath
+  DISPLAY_PATH
     .filter(({ index }) => index !== 100)
     .forEach((cell, index) => {
       const pointX = cell.x * width;
@@ -164,7 +190,7 @@ function drawRouteGuideline(ctx, width, height) {
   ctx.strokeStyle = lineGradient;
   ctx.lineWidth = 8;
   ctx.beginPath();
-  boardPath
+  DISPLAY_PATH
     .filter(({ index }) => index !== 100)
     .forEach((cell, index) => {
       const pointX = cell.x * width;
@@ -181,7 +207,7 @@ function drawRouteGuideline(ctx, width, height) {
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.38)';
   ctx.lineWidth = 2.8;
   ctx.beginPath();
-  boardPath
+  DISPLAY_PATH
     .filter(({ index }) => index !== 100)
     .forEach((cell, index) => {
       const pointX = cell.x * width;
@@ -339,7 +365,7 @@ function renderBoardTiles(root, state = {}) {
     zIndex: '4',
   });
 
-  tileLayer.innerHTML = boardPath
+  tileLayer.innerHTML = DISPLAY_PATH
     .filter(({ index }) => index !== 100)
     .map((cell) => {
       const isCurrent = cell.index === currentPosition;
@@ -351,10 +377,13 @@ function renderBoardTiles(root, state = {}) {
       const isActive = cell.index === activeCell;
       const isLanded = cell.index === landedCell;
 
+      const cellLabel = isLandmark ? (PROP_SHORT_NAMES.get(cell.index) ?? cell.index) : cell.index;
+      const landmarkIcon = isLandmark ? (STICKER_ICONS[landmarkStyle] ?? '✨') : '';
       return `
         <span
           class="board-cell-label ${isLandmark ? 'board-cell-label--landmark' : ''} ${isFinalBend ? 'board-cell-label--final-bend' : ''} ${isFinishLane ? 'board-cell-label--finish-lane' : ''} ${landmarkStyle ? `board-cell-label--landmark-${landmarkStyle}` : ''} ${isCurrent ? 'board-cell-label--current' : ''} ${isTrail ? 'board-cell-label--trail' : ''} ${isActive ? 'board-cell-label--active' : ''} ${isLanded ? 'board-cell-label--landed' : ''}"
           data-cell-label="${cell.index}"
+          data-cell-kind="${cell.kind}"
           data-landmark-style="${landmarkStyle ?? ''}"
           data-final-bend="${isFinalBend}"
           data-finish-lane="${isFinishLane}"
@@ -363,7 +392,9 @@ function renderBoardTiles(root, state = {}) {
           data-landed="${isLanded}"
           style="left:${(cell.x * 100).toFixed(2)}%;top:${(cell.y * 100).toFixed(2)}%;--cell-rotation:${cell.rotation.toFixed(2)}deg;"
         >
-          ${cell.index}
+          ${isLandmark
+    ? `<span class="board-cell-label__icon" aria-hidden="true">${landmarkIcon}</span><span class="board-cell-label__name">${cellLabel}</span>`
+    : `<span class="board-cell-label__value">${cellLabel}</span>`}
         </span>
       `;
     })
@@ -380,38 +411,7 @@ function renderBoardStickers(root) {
     zIndex: '3',
   });
 
-  stickerLayer.innerHTML = boardStickers
-    .map((sticker) => {
-      const lift = sticker.cellY <= sticker.y ? 'up' : 'down';
-      const deltaX = sticker.cellX - sticker.x;
-      const deltaY = sticker.cellY - sticker.y;
-      const linkLength = Math.hypot(deltaX, deltaY) * 100;
-      const linkAngle = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
-      return `
-        <span
-          class="board-sticker-link"
-          data-board-sticker-link="${sticker.id}"
-          aria-hidden="true"
-          style="left:${(sticker.x * 100).toFixed(2)}%;top:${(sticker.y * 100).toFixed(2)}%;width:${linkLength.toFixed(2)}%;--link-angle:${linkAngle.toFixed(2)}deg;"
-        ></span>
-        <button
-          class="board-sticker board-sticker--${sticker.style}"
-          data-board-sticker="${sticker.id}"
-          data-event-id="${sticker.eventId}"
-          data-cell="${sticker.cell}"
-          data-lift="${lift}"
-          aria-label="${sticker.text}，${sticker.detail}"
-          title="${sticker.text} · 第 ${sticker.cell} 格 · ${sticker.detail}"
-          type="button"
-          style="left:${(sticker.x * 100).toFixed(2)}%;top:${(sticker.y * 100).toFixed(2)}%;--sticker-rotation:${sticker.rotation}deg;"
-        >
-          <span class="board-sticker__icon" aria-hidden="true">${STICKER_ICONS[sticker.style] ?? '✨'}</span>
-          <span class="board-sticker__title">${sticker.text}</span>
-          <span class="board-sticker__detail sr-only">${sticker.detail}</span>
-        </button>
-      `;
-    })
-    .join('');
+  stickerLayer.innerHTML = '';
 }
 
 function renderCenterSign(root) {
@@ -460,7 +460,8 @@ function renderPlayerChips(root, state = {}) {
 
   playerLayer.innerHTML = crew
     .map((player, index) => {
-      const cell = getCellMeta(player.position ?? 1);
+      const rawCell = getCellMeta(player.position ?? 1);
+      const cell = DISPLAY_PATH_BY_INDEX.get(rawCell?.index ?? -1) ?? rawCell;
       if (!cell || cell.index === 100) {
         return '';
       }

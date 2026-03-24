@@ -18,8 +18,9 @@ export function renderGameHud(root, { state, layout = { mode: 'desktop' } }) {
   const hudDensity = layoutMode === 'mobile-portrait' ? 'compact' : 'default';
   const recentEventTitle = state.recentEvent?.title ?? '准备出航';
   const recentRolls = Array.isArray(state.recentRolls) ? state.recentRolls : [];
-  const turnLabel = typeof state.turnNumber === 'number' ? `第 ${state.turnNumber} 回合` : '冒险进行中';
-  const soundLabel = state.soundMuted ? '静音中' : '声音开';
+  const turnLabel = typeof state.turnNumber === 'number' ? `回合 ${state.turnNumber}` : '冒险进行中';
+  const bgmMuted = Boolean(state.bgmMuted);
+  const sfxMuted = Boolean(state.sfxMuted);
   const currentPlayerNumber = Math.max(1, crew.findIndex(({ id }) => id === currentPlayer.id) + 1);
   const currentPlayerBadge = getPlayerBadgeText(currentPlayer.name, currentPlayerNumber);
   const motionPhase = state.animation?.phase ?? 'idle';
@@ -47,21 +48,16 @@ export function renderGameHud(root, { state, layout = { mode: 'desktop' } }) {
           : motionPhase === 'result'
             ? '本回合'
             : '掷骰';
+  const statusTags = Array.isArray(state.currentPlayerStatus)
+    ? state.currentPlayerStatus
+    : [];
+  const statusLabel = statusTags.length > 0 ? statusTags.join(' / ') : '正常';
 
   root.innerHTML = `
     <div aria-live="polite" class="sr-only">
-      最近掷骰：${rollSummaryLabel}。轮到 ${currentPlayer.name}。${turnLabel}。${actionTitle}。${recentEventTitle}
+      最近掷骰：${rollSummaryLabel}。轮到 ${currentPlayer.name}。${turnLabel}。状态 ${statusLabel}。${actionTitle}。${recentEventTitle}
     </div>
     <aside data-scene="game-hud" class="hud-float" data-layout="${layoutMode}" data-density="${hudDensity}">
-      <div class="hud-turn-pill" data-role="turn-pill" style="--current-player:${currentPlayer.color};">
-        <span class="hud-turn-pill__avatar">${currentPlayerBadge}</span>
-        <span class="hud-turn-pill__stack">
-          <span class="hud-turn-pill__eyebrow">${turnLabel}</span>
-          <strong class="hud-turn-pill__name">${currentPlayer.name}</strong>
-          <span class="hud-turn-pill__meta">第 ${currentPlayer.position ?? 1} 格</span>
-        </span>
-      </div>
-
       <div class="hud-primary-bar" data-role="hud-primary-bar" data-attach="top">
         <details class="hud-drawer" data-role="hud-drawer">
           <summary class="hud-drawer__toggle" data-role="hud-toggle">
@@ -73,19 +69,23 @@ export function renderGameHud(root, { state, layout = { mode: 'desktop' } }) {
               <div class="hud-settings">
                 <button
                   class="action-button action-button--secondary sound-toggle"
-                  data-role="sound-toggle"
-                  aria-label="切换声音"
-                  aria-pressed="${state.soundMuted ? 'true' : 'false'}"
+                  data-role="bgm-toggle"
+                  aria-label="切换背景音"
+                  aria-pressed="${bgmMuted ? 'true' : 'false'}"
                   type="button"
                 >
-                  <span class="sound-toggle__icon">${state.soundMuted ? '🔇' : '🔊'}</span>
-                  <span class="sound-toggle__text">${soundLabel}</span>
+                  <span class="sound-toggle__icon">${bgmMuted ? '🎵' : '🔊'}</span>
+                  <span class="sound-toggle__text">背景音 ${bgmMuted ? '关' : '开'}</span>
                 </button>
-                <button class="action-button action-button--secondary hud-settings__button" data-role="help-action" type="button">
-                  规则说明
-                </button>
-                <button class="action-button action-button--secondary hud-settings__button" data-role="restart-action" type="button">
-                  重新开始
+                <button
+                  class="action-button action-button--secondary sound-toggle"
+                  data-role="sfx-toggle"
+                  aria-label="切换音效"
+                  aria-pressed="${sfxMuted ? 'true' : 'false'}"
+                  type="button"
+                >
+                  <span class="sound-toggle__icon">${sfxMuted ? '🎯' : '🔔'}</span>
+                  <span class="sound-toggle__text">音效 ${sfxMuted ? '关' : '开'}</span>
                 </button>
               </div>
             </section>
@@ -93,6 +93,13 @@ export function renderGameHud(root, { state, layout = { mode: 'desktop' } }) {
         </details>
 
         <section data-role="action-dock" class="hud-float__dock">
+          <div class="hud-turn-status-bar" data-role="turn-status-bar" style="--current-player:${currentPlayer.color};">
+            <span class="hud-turn-status-bar__avatar">${currentPlayerBadge}</span>
+            <span class="hud-turn-status-bar__text">
+              <strong>${currentPlayer.name}</strong>
+              <span>${turnLabel} · ${statusLabel}</span>
+            </span>
+          </div>
           <button class="action-button action-button--primary dice-fab" data-role="roll-action" data-motion="${motionPhase}" type="button">
             <span class="dice-fab__icon">🎲</span>
             <span class="dice-fab__label">${actionLabel}</span>

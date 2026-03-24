@@ -1,6 +1,7 @@
 import { SOUND_PRESETS } from './sound-presets.js';
 
 export const SOUND_STORAGE_KEY = 'pirate-party-sound-muted';
+const DEFAULT_SOUND_PREFS = Object.freeze({ bgmMuted: false, sfxMuted: false });
 
 function safeStorageGet(storage, key) {
   try {
@@ -170,7 +171,28 @@ export function createAudioEngine({
   performer = createWebAudioPerformer(),
 } = {}) {
   let unlocked = false;
-  let muted = safeStorageGet(storage, SOUND_STORAGE_KEY) === '1';
+  let { bgmMuted, sfxMuted } = (() => {
+    const stored = safeStorageGet(storage, SOUND_STORAGE_KEY);
+    if (stored === '1') {
+      return { bgmMuted: true, sfxMuted: true };
+    }
+    if (!stored || stored === '0') {
+      return { ...DEFAULT_SOUND_PREFS };
+    }
+    try {
+      const parsed = JSON.parse(stored);
+      return {
+        bgmMuted: Boolean(parsed?.bgmMuted),
+        sfxMuted: Boolean(parsed?.sfxMuted),
+      };
+    } catch {
+      return { ...DEFAULT_SOUND_PREFS };
+    }
+  })();
+
+  function persistSoundPrefs() {
+    safeStorageSet(storage, SOUND_STORAGE_KEY, JSON.stringify({ bgmMuted, sfxMuted }));
+  }
 
   async function unlock() {
     const result = await performer.unlock();
@@ -178,12 +200,15 @@ export function createAudioEngine({
     return unlocked;
   }
 
-  function canPlay() {
-    return unlocked && !muted;
+  function canPlay(channel = 'sfx') {
+    if (!unlocked) {
+      return false;
+    }
+    return channel === 'bgm' ? !bgmMuted : !sfxMuted;
   }
 
-  function playPreset(name, options) {
-    if (!canPlay()) {
+  function playPreset(name, options, channel = 'sfx') {
+    if (!canPlay(channel)) {
       return false;
     }
 
@@ -191,36 +216,59 @@ export function createAudioEngine({
   }
 
   function setMuted(nextMuted) {
-    muted = Boolean(nextMuted);
-    safeStorageSet(storage, SOUND_STORAGE_KEY, muted ? '1' : '0');
+    const target = Boolean(nextMuted);
+    bgmMuted = target;
+    sfxMuted = target;
+    persistSoundPrefs();
+  }
+
+  function setBgmMuted(nextMuted) {
+    bgmMuted = Boolean(nextMuted);
+    persistSoundPrefs();
+  }
+
+  function setSfxMuted(nextMuted) {
+    sfxMuted = Boolean(nextMuted);
+    persistSoundPrefs();
   }
 
   return {
     unlock,
     isMuted() {
-      return muted;
+      return bgmMuted && sfxMuted;
+    },
+    isBgmMuted() {
+      return bgmMuted;
+    },
+    isSfxMuted() {
+      return sfxMuted;
     },
     setMuted,
+    setBgmMuted,
+    setSfxMuted,
+    playBgmLoop(options) {
+      return playPreset('bgmLoop', options, 'bgm');
+    },
     playDicePress() {
-      return playPreset('dicePress');
+      return playPreset('dicePress', undefined, 'sfx');
     },
     playDiceRollTick(options) {
-      return playPreset('diceRollTick', options);
+      return playPreset('diceRollTick', options, 'sfx');
     },
     playDiceStop(options) {
-      return playPreset('diceStop', options);
+      return playPreset('diceStop', options, 'sfx');
     },
     playStepHop(options) {
-      return playPreset('stepHop', options);
+      return playPreset('stepHop', options, 'sfx');
     },
     playLandingBloom(options) {
-      return playPreset('landingBloom', options);
+      return playPreset('landingBloom', options, 'sfx');
     },
     playEventSpark(options) {
-      return playPreset('eventSpark', options);
+      return playPreset('eventSpark', options, 'sfx');
     },
     playTreasureWin(options) {
-      return playPreset('treasureWin', options);
+      return playPreset('treasureWin', options, 'sfx');
     },
   };
 }

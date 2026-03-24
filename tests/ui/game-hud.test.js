@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { getPlayerBadgeText } from '../../src/core/players.js';
 import { renderGameHud } from '../../src/ui/game-hud.js';
 
 describe('game HUD', () => {
-  it('renders a current-player pill and a settings drawer without the old status panels', () => {
+  it('renders a bottom status bar and keeps settings drawer sound-only controls', () => {
     const root = document.createElement('div');
 
     renderGameHud(root, {
@@ -15,31 +14,39 @@ describe('game HUD', () => {
           { id: 'crew-2', name: '海盗甲', color: '#4ecdc4', position: 16 },
         ],
         recentEvent: { title: '海豚快线' },
-        soundMuted: false,
+        bgmMuted: false,
+        sfxMuted: false,
+        currentPlayerStatus: ['冻结'],
       },
     });
 
     const drawer = root.querySelector('[data-role="hud-drawer"]');
-    const soundToggle = root.querySelector('[data-role="sound-toggle"]');
-    const turnPill = root.querySelector('[data-role="turn-pill"]');
+    const bgmToggle = root.querySelector('[data-role="bgm-toggle"]');
+    const sfxToggle = root.querySelector('[data-role="sfx-toggle"]');
+    const statusBar = root.querySelector('[data-role="turn-status-bar"]');
 
     expect(root.textContent).toContain('小船长');
-    expect(root.textContent).toContain('第 4 回合');
-    expect(root.textContent).toContain('第 18 格');
+    expect(root.textContent).toContain('回合 4');
+    expect(root.textContent).toContain('冻结');
     expect(root.querySelector('[data-role="roll-action"]')).not.toBeNull();
     expect(root.querySelector('[data-role="hud-toggle"]')).not.toBeNull();
-    expect(turnPill).not.toBeNull();
-    expect(turnPill?.textContent).toContain('小船长');
-    expect(turnPill?.textContent).toContain('第 4 回合');
-    expect(root.querySelector('.hud-turn-pill__avatar')?.textContent).toBe(getPlayerBadgeText('小船长', 1));
+    expect(statusBar).not.toBeNull();
+    expect(statusBar?.textContent).toContain('小船长');
+    expect(statusBar?.textContent).toContain('回合 4');
+    expect(statusBar?.textContent).toContain('冻结');
+    expect(root.querySelector('.hud-turn-pill')).toBeNull();
+    expect(root.querySelector('.hud-turn-pill__avatar')).toBeNull();
     expect(drawer).not.toBeNull();
     expect(drawer?.hasAttribute('open')).toBe(false);
     expect(root.querySelector('[data-role="current-player-banner"]')).toBeNull();
     expect(root.querySelector('[data-role="player-legend"]')).toBeNull();
     expect(root.querySelector('[data-role="event-note"]')).toBeNull();
-    expect(root.querySelector('[data-role="help-action"]')).not.toBeNull();
-    expect(root.querySelector('[data-role="restart-action"]')).not.toBeNull();
-    expect(soundToggle).not.toBeNull();
+    expect(root.querySelector('[data-role="help-action"]')).toBeNull();
+    expect(root.querySelector('[data-role="restart-action"]')).toBeNull();
+    expect(bgmToggle).not.toBeNull();
+    expect(sfxToggle).not.toBeNull();
+    expect(bgmToggle?.getAttribute('aria-pressed')).toBe('false');
+    expect(sfxToggle?.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('shows a rolling dice state with the live face value while a turn animation is playing', () => {
@@ -69,7 +76,7 @@ describe('game HUD', () => {
     expect(rollButton?.textContent).toContain('5');
   });
 
-  it('renders the top-left current-player pill even before any dice roll happens', () => {
+  it('renders status bar instead of top-left current-player pill before first roll', () => {
     const root = document.createElement('div');
 
     renderGameHud(root, {
@@ -84,8 +91,9 @@ describe('game HUD', () => {
       },
     });
 
-    expect(root.querySelector('[data-role="turn-pill"]')).not.toBeNull();
-    expect(root.querySelector('[data-role="turn-pill"]')?.textContent).toContain('第 1 回合');
+    expect(root.querySelector('[data-role="turn-pill"]')).toBeNull();
+    expect(root.querySelector('[data-role="turn-status-bar"]')).not.toBeNull();
+    expect(root.querySelector('[data-role="turn-status-bar"]')?.textContent).toContain('回合 1');
   });
 
   it('keeps portrait mobile controls attached on top of the board instead of docking a bottom bar', () => {

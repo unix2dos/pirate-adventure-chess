@@ -67,6 +67,20 @@ function createHudState(engineState, recentTitle = '准备出航', overrides = {
     : crew[engineState.currentPlayerIndex] ?? crew[0];
   const cellMeta = getCellMeta(currentPlayer?.position ?? 1);
 
+  const derivedStatuses = [];
+  if ((currentPlayer?.skipTurns ?? 0) > 0) {
+    derivedStatuses.push('冻结');
+  }
+  if ((currentPlayer?.rollModifier ?? 0) > 0) {
+    derivedStatuses.push('加速');
+  }
+  if ((currentPlayer?.rollModifier ?? 0) < 0) {
+    derivedStatuses.push('减速');
+  }
+  if ((currentPlayer?.extraTurns ?? 0) > 0) {
+    derivedStatuses.push('护盾');
+  }
+
   return {
     turnNumber: hasOwnOverride(overrides, 'turnNumber') ? overrides.turnNumber : engineState.turnNumber,
     currentPlayer,
@@ -80,7 +94,11 @@ function createHudState(engineState, recentTitle = '准备出航', overrides = {
     gameOver: hasOwnOverride(overrides, 'gameOver') ? overrides.gameOver : engineState.gameOver,
     pendingEvent: hasOwnOverride(overrides, 'pendingEvent') ? overrides.pendingEvent : engineState.pendingEvent,
     animation: hasOwnOverride(overrides, 'animation') ? overrides.animation : null,
-    soundMuted: hasOwnOverride(overrides, 'soundMuted') ? overrides.soundMuted : false,
+    bgmMuted: hasOwnOverride(overrides, 'bgmMuted') ? overrides.bgmMuted : false,
+    sfxMuted: hasOwnOverride(overrides, 'sfxMuted') ? overrides.sfxMuted : false,
+    currentPlayerStatus: hasOwnOverride(overrides, 'currentPlayerStatus')
+      ? overrides.currentPlayerStatus
+      : derivedStatuses,
   };
 }
 
@@ -111,7 +129,8 @@ function renderGameScene(root, payload = {}) {
   const { engine, onWin, onRestart, soundEngine } = payload;
   function deriveHudState(engineState, recentTitle = '准备出航', overrides = {}) {
     return createHudState(engineState, recentTitle, {
-      soundMuted: soundEngine?.isMuted?.() ?? false,
+      bgmMuted: soundEngine?.isBgmMuted?.() ?? soundEngine?.isMuted?.() ?? false,
+      sfxMuted: soundEngine?.isSfxMuted?.() ?? soundEngine?.isMuted?.() ?? false,
       ...overrides,
     });
   }
@@ -421,39 +440,37 @@ function renderGameScene(root, payload = {}) {
       overlayStage.innerHTML = '';
     }
 
-    const soundToggle = hudStage.querySelector('[data-role="sound-toggle"]');
-    if (soundToggle && soundEngine) {
-      soundToggle.addEventListener('click', () => {
-        soundEngine.setMuted(!soundEngine.isMuted());
+    const bgmToggle = hudStage.querySelector('[data-role="bgm-toggle"]');
+    if (bgmToggle && soundEngine) {
+      bgmToggle.addEventListener('click', () => {
+        const nextValue = !(soundEngine.isBgmMuted?.() ?? soundEngine.isMuted?.() ?? false);
+        if (typeof soundEngine.setBgmMuted === 'function') {
+          soundEngine.setBgmMuted(nextValue);
+        } else {
+          soundEngine.setMuted(nextValue);
+        }
         sceneState = {
           ...sceneState,
-          soundMuted: soundEngine.isMuted(),
+          bgmMuted: soundEngine.isBgmMuted?.() ?? soundEngine.isMuted?.() ?? false,
         };
         renderFrame();
       }, { once: true });
     }
 
-    const helpButton = hudStage.querySelector('[data-role="help-action"]');
-    if (helpButton) {
-      helpButton.addEventListener('click', () => {
-        openInfoOverlay({
-          eyebrow: '规则说明',
-          title: '规则说明',
-          trigger: '点击挂卡可以提前查看对应格子的规则。',
-          effectText: '设置里可以调声音、重新开始；真正踩到对应格子时，会按照挂卡说明稳定触发效果。',
-          example: '例如“幸运骰”会让当前玩家再掷一次，“宝石礁”会让下回合多走 1 格。',
-        }, {
-          layout: 'modal',
-        });
-      }, { once: true });
-    }
-
-    const restartButton = hudStage.querySelector('[data-role="restart-action"]');
-    if (restartButton && typeof onRestart === 'function') {
-      restartButton.addEventListener('click', () => {
-        clearAiTurnTimeout();
-        infoOverlay = null;
-        onRestart();
+    const sfxToggle = hudStage.querySelector('[data-role="sfx-toggle"]');
+    if (sfxToggle && soundEngine) {
+      sfxToggle.addEventListener('click', () => {
+        const nextValue = !(soundEngine.isSfxMuted?.() ?? soundEngine.isMuted?.() ?? false);
+        if (typeof soundEngine.setSfxMuted === 'function') {
+          soundEngine.setSfxMuted(nextValue);
+        } else {
+          soundEngine.setMuted(nextValue);
+        }
+        sceneState = {
+          ...sceneState,
+          sfxMuted: soundEngine.isSfxMuted?.() ?? soundEngine.isMuted?.() ?? false,
+        };
+        renderFrame();
       }, { once: true });
     }
 
@@ -559,7 +576,10 @@ export function createApp(root, options = {}) {
         sceneManager.showGame({
           engine,
           soundEngine,
-          state: createHudState(engine.getState(), '扬帆起航', { soundMuted: soundEngine.isMuted() }),
+          state: createHudState(engine.getState(), '扬帆起航', {
+            bgmMuted: soundEngine.isBgmMuted?.() ?? soundEngine.isMuted?.() ?? false,
+            sfxMuted: soundEngine.isSfxMuted?.() ?? soundEngine.isMuted?.() ?? false,
+          }),
           onRestart: showStartScene,
           onWin(engineState) {
             sceneManager.showWin(createWinPayload(engineState, showStartScene));

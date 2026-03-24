@@ -25,7 +25,7 @@ describe('audio engine', () => {
     };
   });
 
-  it('unlocks on first gesture and suppresses playback while muted', async () => {
+  it('unlocks on first gesture and supports independent BGM/SFX mute controls', async () => {
     const engine = createAudioEngine({ storage, performer });
 
     engine.playDicePress();
@@ -36,18 +36,28 @@ describe('audio engine', () => {
     expect(performer.unlock).toHaveBeenCalledTimes(1);
     expect(performer.playPreset).toHaveBeenCalledWith('dicePress', undefined);
 
-    engine.setMuted(true);
+    engine.setBgmMuted(true);
     engine.playStepHop({ stepIndex: 1, totalSteps: 4 });
-    expect(engine.isMuted()).toBe(true);
-    expect(storage.getItem(SOUND_STORAGE_KEY)).toBe('1');
-    expect(performer.playPreset).toHaveBeenCalledTimes(1);
+    expect(engine.isBgmMuted()).toBe(true);
+    expect(engine.isSfxMuted()).toBe(false);
+    expect(storage.getItem(SOUND_STORAGE_KEY)).toContain('"bgmMuted":true');
+    expect(performer.playPreset).toHaveBeenCalledTimes(2);
+
+    engine.playBgmLoop();
+    expect(performer.playPreset).toHaveBeenCalledTimes(2);
+
+    engine.setSfxMuted(true);
+    engine.playStepHop({ stepIndex: 2, totalSteps: 4 });
+    expect(engine.isSfxMuted()).toBe(true);
+    expect(performer.playPreset).toHaveBeenCalledTimes(2);
   });
 
-  it('hydrates the saved mute preference from storage', () => {
-    storage.setItem(SOUND_STORAGE_KEY, '1');
+  it('hydrates the saved split mute preferences from storage', () => {
+    storage.setItem(SOUND_STORAGE_KEY, JSON.stringify({ bgmMuted: true, sfxMuted: false }));
 
     const engine = createAudioEngine({ storage, performer });
 
-    expect(engine.isMuted()).toBe(true);
+    expect(engine.isBgmMuted()).toBe(true);
+    expect(engine.isSfxMuted()).toBe(false);
   });
 });
