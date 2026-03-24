@@ -3,6 +3,7 @@ export function createSceneManager(root, renderers = {}) {
     throw new Error('createSceneManager requires a mount root element.');
   }
 
+  let cleanupCurrentScene = null;
   const scenes = {
     start: renderers.renderStart,
     game: renderers.renderGame,
@@ -10,11 +11,13 @@ export function createSceneManager(root, renderers = {}) {
   };
 
   function show(sceneName, payload = {}) {
+    cleanupCurrentScene?.();
+    cleanupCurrentScene = null;
     root.innerHTML = '';
     const renderScene = scenes[sceneName];
 
     if (typeof renderScene === 'function') {
-      renderScene(root, payload);
+      cleanupCurrentScene = renderScene(root, payload) ?? null;
       return;
     }
 

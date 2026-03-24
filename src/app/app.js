@@ -11,6 +11,7 @@ import { renderEventOverlay } from '../ui/event-overlay.js';
 import { renderInfoOverlay } from '../ui/info-overlay.js';
 import { renderWinScreen } from '../ui/win-screen.js';
 import { createAudioEngine } from '../audio/audio-engine.js';
+import { getViewportLayoutState } from './viewport-layout.js';
 
 const PLAYER_COLORS = ['#ff6b6b', '#4ecdc4', '#ffd166', '#7a9cff'];
 const TURN_ANIMATION_MS = {
@@ -119,9 +120,10 @@ function renderGameScene(root, payload = {}) {
   let isAnimatingTurn = false;
   let aiTurnTimeoutId = null;
   let infoOverlay = null;
+  let viewportLayout = getViewportLayoutState(globalThis);
 
   root.innerHTML = `
-    <section data-scene="game" class="scene-shell game-scene">
+    <section data-scene="game" class="scene-shell game-scene" data-layout="${viewportLayout.mode}">
       <div class="game-layout">
         <div class="game-stage">
           <div data-role="board-stage" class="board-stage-shell"></div>
@@ -132,9 +134,17 @@ function renderGameScene(root, payload = {}) {
     </section>
   `;
 
+  const sceneRoot = root.querySelector('[data-scene="game"]');
   const boardStage = root.querySelector('[data-role="board-stage"]');
   const hudStage = root.querySelector('[data-role="hud-stage"]');
   const overlayStage = root.querySelector('[data-role="event-overlay-stage"]');
+
+  function syncViewportLayout() {
+    viewportLayout = getViewportLayoutState(globalThis);
+    sceneRoot.dataset.layout = viewportLayout.mode;
+    sceneRoot.style.setProperty('--viewport-width', `${viewportLayout.width}px`);
+    sceneRoot.style.setProperty('--viewport-height', `${viewportLayout.height}px`);
+  }
 
   function clearAiTurnTimeout() {
     if (aiTurnTimeoutId !== null) {
@@ -144,7 +154,7 @@ function renderGameScene(root, payload = {}) {
   }
 
   function getInfoOverlayLayout() {
-    return globalThis.matchMedia?.('(max-width: 640px)').matches ? 'sheet' : 'anchored';
+    return viewportLayout.infoOverlayLayout;
   }
 
   function buildStickerAnchor(button) {
@@ -191,7 +201,9 @@ function renderGameScene(root, payload = {}) {
     infoOverlay = {
       detail,
       layout: options.layout ?? getInfoOverlayLayout(),
-      anchor: options.anchor ?? null,
+      anchor: options.layout === 'anchored' || (!options.layout && getInfoOverlayLayout() === 'anchored')
+        ? options.anchor ?? null
+        : null,
     };
     renderFrame();
   }
@@ -369,11 +381,15 @@ function renderGameScene(root, payload = {}) {
       return;
     }
 
+    syncViewportLayout();
     clearAiTurnTimeout();
 
     renderBoardRenderer(boardStage, { state: sceneState });
     renderAnimationLayer(boardStage, { state: sceneState });
-    renderGameHud(hudStage, { state: sceneState });
+    renderGameHud(hudStage, {
+      state: sceneState,
+      layout: viewportLayout,
+    });
 
     const pendingEvent = sceneState.pendingEvent?.event;
     if (pendingEvent && engine) {
@@ -427,7 +443,7 @@ function renderGameScene(root, payload = {}) {
           effectText: '设置里可以调声音、重新开始；真正踩到对应格子时，会按照挂卡说明稳定触发效果。',
           example: '例如“幸运骰”会让当前玩家再掷一次，“宝石礁”会让下回合多走 1 格。',
         }, {
-          layout: 'sheet',
+          layout: 'modal',
         });
       }, { once: true });
     }
@@ -449,8 +465,10 @@ function renderGameScene(root, payload = {}) {
           return;
         }
 
+        const layout = getInfoOverlayLayout();
         openInfoOverlay(detail, {
-          anchor: getInfoOverlayLayout() === 'anchored' ? buildStickerAnchor(button) : null,
+          layout,
+          anchor: layout === 'anchored' ? buildStickerAnchor(button) : null,
         });
       }, { once: true });
     });
@@ -492,6 +510,19 @@ function renderGameScene(root, payload = {}) {
   }
 
   renderFrame();
+  const handleViewportChange = () => {
+    syncViewportLayout();
+    renderFrame();
+  };
+
+  globalThis.addEventListener?.('resize', handleViewportChange);
+  globalThis.visualViewport?.addEventListener?.('resize', handleViewportChange);
+
+  return () => {
+    clearAiTurnTimeout();
+    globalThis.removeEventListener?.('resize', handleViewportChange);
+    globalThis.visualViewport?.removeEventListener?.('resize', handleViewportChange);
+  };
 }
 
 export function createApp(root, options = {}) {
@@ -509,7 +540,7 @@ export function createApp(root, options = {}) {
       renderStartScreen(mount, { onStart });
     },
     renderGame(mount, payload) {
-      renderGameScene(mount, payload);
+      return renderGameScene(mount, payload);
     },
     renderWin(mount, payload) {
       renderWinScreen(mount, payload);

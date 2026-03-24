@@ -31,11 +31,11 @@ describe('info overlay', () => {
     expect(closed).toBe(true);
   });
 
-  it('supports sheet mode for small screens', () => {
+  it('supports modal mode for compact screens while keeping dialog semantics', () => {
     const root = document.createElement('div');
 
     renderInfoOverlay(root, {
-      layout: 'sheet',
+      layout: 'modal',
       detail: {
         title: '规则说明',
         trigger: '点击挂卡可查看说明',
@@ -44,6 +44,7 @@ describe('info overlay', () => {
       onClose() {},
     });
 
-    expect(root.querySelector('[data-role="info-overlay"]')?.dataset.layout).toBe('sheet');
+    expect(root.querySelector('[data-role="info-overlay"]')?.dataset.layout).toBe('modal');
+    expect(root.querySelector('[role="dialog"]')).not.toBeNull();
   });
 });

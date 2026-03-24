@@ -13,8 +13,8 @@ export function renderEventOverlay(root, { event, onResolve }) {
     <section data-scene="event-overlay" class="event-overlay" role="alertdialog" aria-modal="true" aria-labelledby="event-title" aria-describedby="event-desc">
       <div aria-live="assertive" class="sr-only">触发海上遭遇：${event?.title ?? '神秘遭遇'}。${event?.description ?? ''}</div>
       <article class="overlay-card">
-        <span class="scene-caption">海上遭遇</span>
-        <div class="stack" style="margin-top:1rem;">
+        <div class="overlay-card__body stack">
+          <span class="scene-caption">海上遭遇</span>
           <div class="overlay-badge" aria-hidden="true">${event?.emoji ?? '🌊'}</div>
           <h2 id="event-title" class="overlay-title">${event?.title ?? '神秘遭遇'}</h2>
           <p id="event-desc" class="overlay-copy">${event?.description ?? ''}</p>

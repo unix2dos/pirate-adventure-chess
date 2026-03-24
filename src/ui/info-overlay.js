@@ -7,15 +7,22 @@ function readAnchorStyle(anchor = {}) {
   return `left:${anchor.left}px;top:${anchor.top}px;max-width:${maxWidth}px;`;
 }
 
+function normalizeLayout(layout = 'anchored') {
+  return layout === 'sheet' ? 'modal' : layout;
+}
+
 export function renderInfoOverlay(root, { detail = {}, layout = 'anchored', anchor = null, onClose }) {
+  const normalizedLayout = normalizeLayout(layout);
+  const isDialogLayout = normalizedLayout !== 'anchored';
+
   root.innerHTML = `
     <section
       data-role="info-overlay"
       class="info-overlay"
-      data-layout="${layout}"
-      ${layout === 'sheet' ? 'role="dialog" aria-modal="true"' : ''}
+      data-layout="${normalizedLayout}"
+      ${isDialogLayout ? 'role="dialog" aria-modal="true"' : ''}
     >
-      <article class="info-overlay__card" style="${layout === 'anchored' ? readAnchorStyle(anchor) : ''}">
+      <article class="info-overlay__card" style="${normalizedLayout === 'anchored' ? readAnchorStyle(anchor) : ''}">
         <button
           class="info-overlay__close"
           data-role="close-info-overlay"

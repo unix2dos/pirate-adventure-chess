@@ -192,8 +192,50 @@
   }
 }
 
+@media (max-width: 820px) {
+  .start-scene,
+  .win-scene {
+    align-items: start;
+  }
+
+  .start-panel,
+  .win-panel {
+    order: -1;
+  }
+
+  .start-hero,
+  .win-hero {
+    gap: 0.9rem;
+  }
+
+  .map-showcase {
+    min-height: 220px;
+  }
+}
+
 @media (max-width: 640px) {
   .game-scene {
     --scene-padding: 0;
+  }
+
+  .map-showcase {
+    min-height: 180px;
+    border-radius: 28px;
+    padding: 1rem;
+  }
+
+  .map-showcase__token {
+    padding: 0.48rem 0.72rem;
+    font-size: 0.78rem;
+  }
+
+  .sticker {
+    padding: 0.55rem 0.8rem;
+    font-size: 0.86rem;
+  }
+
+  .win-panel .ranking-item {
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 }

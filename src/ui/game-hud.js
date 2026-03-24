@@ -11,9 +11,10 @@ function buildRecentRollSummary(recentRolls = []) {
     .join('，');
 }
 
-export function renderGameHud(root, { state }) {
+export function renderGameHud(root, { state, layout = { mode: 'desktop' } }) {
   const currentPlayer = state.currentPlayer ?? { id: 'crew-1', name: '待命船员', color: '#ff6b6b' };
   const crew = Array.isArray(state.crew) && state.crew.length > 0 ? state.crew : [currentPlayer];
+  const layoutMode = layout?.mode ?? 'desktop';
   const recentEventTitle = state.recentEvent?.title ?? '准备出航';
   const recentRolls = Array.isArray(state.recentRolls) ? state.recentRolls : [];
   const turnLabel = typeof state.turnNumber === 'number' ? `第 ${state.turnNumber} 回合` : '冒险进行中';
@@ -50,7 +51,7 @@ export function renderGameHud(root, { state }) {
     <div aria-live="polite" class="sr-only">
       最近掷骰：${rollSummaryLabel}。轮到 ${currentPlayer.name}。${turnLabel}。${actionTitle}。${recentEventTitle}
     </div>
-    <aside data-scene="game-hud" class="hud-float">
+    <aside data-scene="game-hud" class="hud-float" data-layout="${layoutMode}">
       <div class="hud-turn-pill" data-role="turn-pill" style="--current-player:${currentPlayer.color};">
         <span class="hud-turn-pill__avatar">${currentPlayerBadge}</span>
         <span class="hud-turn-pill__stack">
@@ -60,42 +61,44 @@ export function renderGameHud(root, { state }) {
         </span>
       </div>
 
-      <details class="hud-drawer" data-role="hud-drawer">
-        <summary class="hud-drawer__toggle" data-role="hud-toggle">
-          设置
-        </summary>
-        <div class="hud-drawer__sheet">
-          <section class="hud-drawer__panel hud-drawer__panel--settings">
-            <p class="hud-mini__eyebrow">设置</p>
-            <div class="hud-settings">
-              <button
-                class="action-button action-button--secondary sound-toggle"
-                data-role="sound-toggle"
-                aria-label="切换声音"
-                aria-pressed="${state.soundMuted ? 'true' : 'false'}"
-                type="button"
-              >
-                <span class="sound-toggle__icon">${state.soundMuted ? '🔇' : '🔊'}</span>
-                <span class="sound-toggle__text">${soundLabel}</span>
-              </button>
-              <button class="action-button action-button--secondary hud-settings__button" data-role="help-action" type="button">
-                规则说明
-              </button>
-              <button class="action-button action-button--secondary hud-settings__button" data-role="restart-action" type="button">
-                重新开始
-              </button>
-            </div>
-          </section>
-        </div>
-      </details>
+      <div class="hud-primary-bar" data-role="hud-primary-bar">
+        <details class="hud-drawer" data-role="hud-drawer">
+          <summary class="hud-drawer__toggle" data-role="hud-toggle">
+            设置
+          </summary>
+          <div class="hud-drawer__sheet">
+            <section class="hud-drawer__panel hud-drawer__panel--settings">
+              <p class="hud-mini__eyebrow">设置</p>
+              <div class="hud-settings">
+                <button
+                  class="action-button action-button--secondary sound-toggle"
+                  data-role="sound-toggle"
+                  aria-label="切换声音"
+                  aria-pressed="${state.soundMuted ? 'true' : 'false'}"
+                  type="button"
+                >
+                  <span class="sound-toggle__icon">${state.soundMuted ? '🔇' : '🔊'}</span>
+                  <span class="sound-toggle__text">${soundLabel}</span>
+                </button>
+                <button class="action-button action-button--secondary hud-settings__button" data-role="help-action" type="button">
+                  规则说明
+                </button>
+                <button class="action-button action-button--secondary hud-settings__button" data-role="restart-action" type="button">
+                  重新开始
+                </button>
+              </div>
+            </section>
+          </div>
+        </details>
 
-      <section data-role="action-dock" class="hud-float__dock">
-        <button class="action-button action-button--primary dice-fab" data-role="roll-action" data-motion="${motionPhase}" type="button">
-          <span class="dice-fab__icon">🎲</span>
-          <span class="dice-fab__label">${actionLabel}</span>
-          ${diceValue ? `<span class="dice-fab__value">${diceValue}</span>` : ''}
-        </button>
-      </section>
+        <section data-role="action-dock" class="hud-float__dock">
+          <button class="action-button action-button--primary dice-fab" data-role="roll-action" data-motion="${motionPhase}" type="button">
+            <span class="dice-fab__icon">🎲</span>
+            <span class="dice-fab__label">${actionLabel}</span>
+            ${diceValue ? `<span class="dice-fab__value">${diceValue}</span>` : ''}
+          </button>
+        </section>
+      </div>
     </aside>
   `;
 }

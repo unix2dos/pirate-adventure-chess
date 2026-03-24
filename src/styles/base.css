@@ -1,6 +1,8 @@
 :root {
   color-scheme: light;
   --app-height: 100vh;
+  --viewport-width: 100vw;
+  --viewport-height: var(--app-height);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -45,11 +47,11 @@
 }
 
 html {
-  min-height: var(--app-height);
+  min-height: var(--viewport-height);
 }
 
 body {
-  min-height: var(--app-height);
+  min-height: var(--viewport-height);
   margin: 0;
   font-family: var(--font-body);
   color: var(--ink-strong);
@@ -102,7 +104,7 @@ img {
 
 #app[data-theme='pirate-party'] {
   position: relative;
-  min-height: var(--app-height);
+  min-height: var(--viewport-height);
   isolation: isolate;
 }
 

@@ -87,4 +87,29 @@ describe('game HUD', () => {
     expect(root.querySelector('[data-role="turn-pill"]')).not.toBeNull();
     expect(root.querySelector('[data-role="turn-pill"]')?.textContent).toContain('第 1 回合');
   });
+
+  it('renders a compact bottom action bar for portrait mobile layouts', () => {
+    const root = document.createElement('div');
+
+    renderGameHud(root, {
+      layout: { mode: 'mobile-portrait' },
+      state: {
+        turnNumber: 3,
+        currentPlayer: { id: 'crew-1', name: '小船长', color: '#ff6b6b', position: 9 },
+        crew: [
+          { id: 'crew-1', name: '小船长', color: '#ff6b6b', position: 9 },
+          { id: 'crew-2', name: '海盗甲', color: '#4ecdc4', position: 7 },
+        ],
+        recentEvent: { title: '准备出航' },
+      },
+    });
+
+    const hudRoot = root.querySelector('[data-scene="game-hud"]');
+    const primaryBar = root.querySelector('[data-role="hud-primary-bar"]');
+
+    expect(hudRoot?.dataset.layout).toBe('mobile-portrait');
+    expect(primaryBar).not.toBeNull();
+    expect(primaryBar?.contains(root.querySelector('[data-role="hud-drawer"]'))).toBe(true);
+    expect(primaryBar?.contains(root.querySelector('[data-role="roll-action"]'))).toBe(true);
+  });
 });
