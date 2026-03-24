@@ -1,7 +1,5 @@
 export function renderStartScreen(root, { onStart }) {
-  let selectedCount = 2;
-  let useAI = true;
-  const countOptions = [2, 3, 4];
+  let selectedMode = 'solo-ai';
 
   root.innerHTML = `
     <section data-scene="start" class="scene-shell start-scene">
@@ -44,16 +42,19 @@ export function renderStartScreen(root, { onStart }) {
         <article class="scene-panel start-panel stack">
           <span class="scene-caption">准备起航</span>
           <h2 class="panel-title">先把今天的船队叫上船</h2>
-          <div class="count-picker" data-role="count-picker">
-            ${countOptions.map((count) => `
+          <div class="mode-picker" data-role="mode-picker">
+            ${[
+              ['solo-ai', '1 人 + AI'],
+              ['local-duo', '本地双人'],
+            ].map(([mode, label]) => `
               <button
                 class="count-option"
-                data-count="${count}"
-                data-active="${count === selectedCount}"
-                aria-pressed="${count === selectedCount}"
+                data-mode="${mode}"
+                data-active="${mode === selectedMode}"
+                aria-pressed="${mode === selectedMode}"
                 type="button"
               >
-                ${count} 人
+                ${label}
               </button>
             `).join('')}
           </div>
@@ -61,10 +62,7 @@ export function renderStartScreen(root, { onStart }) {
             <span class="field-label">给 1 号船长起个名字</span>
             <input id="player-name-0" class="name-field" value="你" maxlength="12" />
           </label>
-          <label class="toggle-row">
-            <input id="use-ai" type="checkbox" checked />
-            <span>其他船员交给 AI 掌舵，轮到他们也能自己走。</span>
-          </label>
+          <div data-role="second-player-field"></div>
           <div class="stack">
             <span class="field-label">出航名单</span>
             <div class="crew-preview" data-role="crew-preview"></div>
@@ -77,21 +75,51 @@ export function renderStartScreen(root, { onStart }) {
   `;
 
   const nameInput = root.querySelector('#player-name-0');
-  const useAICheckbox = root.querySelector('#use-ai');
   const previewRoot = root.querySelector('[data-role="crew-preview"]');
+  const secondPlayerField = root.querySelector('[data-role="second-player-field"]');
+  let secondNameInput = null;
 
-  function syncCountButtons() {
-    root.querySelectorAll('[data-count]').forEach((button) => {
-      const active = Number(button.dataset.count) === selectedCount;
+  function getSecondPlayerName() {
+    if (selectedMode === 'local-duo') {
+      return secondNameInput?.value || '2 号船长';
+    }
+
+    return '海盗1';
+  }
+
+  function syncModeButtons() {
+    root.querySelectorAll('[data-mode]').forEach((button) => {
+      const active = button.dataset.mode === selectedMode;
       button.dataset.active = String(active);
       button.setAttribute('aria-pressed', String(active));
     });
   }
 
+  function renderSecondPlayerField() {
+    if (selectedMode !== 'local-duo') {
+      secondPlayerField.innerHTML = `
+        <p class="helper-text">默认由 AI 帮你掌舵另一艘船，想同屏对战时再切到本地双人。</p>
+      `;
+      secondNameInput = null;
+      return;
+    }
+
+    secondPlayerField.innerHTML = `
+      <label class="stack">
+        <span class="field-label">给 2 号船长起个名字</span>
+        <input id="player-name-1" class="name-field" value="伙伴" maxlength="12" />
+      </label>
+    `;
+    secondNameInput = secondPlayerField.querySelector('#player-name-1');
+    secondNameInput?.addEventListener('input', () => {
+      renderPreview();
+    });
+  }
+
   function renderPreview() {
-    previewRoot.innerHTML = Array.from({ length: selectedCount }, (_, index) => {
-      const isAIPlayer = index > 0 && useAI;
-      const name = index === 0 ? (nameInput.value || '你') : `海盗${index}`;
+    previewRoot.innerHTML = Array.from({ length: 2 }, (_, index) => {
+      const isAIPlayer = index === 1 && selectedMode === 'solo-ai';
+      const name = index === 0 ? (nameInput.value || '你') : getSecondPlayerName();
       return `
         <span class="preview-pill" data-ai="${isAIPlayer}">
           ${isAIPlayer ? '🤖' : '🧭'} ${name}
@@ -100,33 +128,31 @@ export function renderStartScreen(root, { onStart }) {
     }).join('');
   }
 
-  syncCountButtons();
+  syncModeButtons();
+  renderSecondPlayerField();
   renderPreview();
 
   nameInput.addEventListener('input', () => {
     renderPreview();
   });
 
-  useAICheckbox.addEventListener('change', () => {
-    useAI = useAICheckbox.checked;
-    renderPreview();
-  });
-
-  root.querySelectorAll('[data-count]').forEach((button) => {
+  root.querySelectorAll('[data-mode]').forEach((button) => {
     button.addEventListener('click', () => {
-      selectedCount = Number(button.dataset.count) || 2;
-      syncCountButtons();
+      selectedMode = button.dataset.mode || 'solo-ai';
+      syncModeButtons();
+      renderSecondPlayerField();
       renderPreview();
     });
   });
 
   root.querySelector('[data-role="start-adventure"]').addEventListener('click', () => {
     const captainName = nameInput.value || '你';
+    const partnerName = getSecondPlayerName();
     onStart({
-      players: Array.from({ length: selectedCount }, (_, index) => ({
-        name: index === 0 ? captainName : `海盗${index}`,
-        isAI: index > 0 && useAI,
-      })),
+      players: [
+        { name: captainName, isAI: false },
+        { name: partnerName, isAI: selectedMode === 'solo-ai' },
+      ],
     });
   });
 }

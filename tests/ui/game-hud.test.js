@@ -3,7 +3,7 @@ import { getPlayerBadgeText } from '../../src/core/players.js';
 import { renderGameHud } from '../../src/ui/game-hud.js';
 
 describe('game HUD', () => {
-  it('renders a floating dice button while surfacing the current player by name', () => {
+  it('renders a current-player pill and a settings drawer without the old status panels', () => {
     const root = document.createElement('div');
 
     renderGameHud(root, {
@@ -20,27 +20,25 @@ describe('game HUD', () => {
     });
 
     const drawer = root.querySelector('[data-role="hud-drawer"]');
-    const currentPlayerBanner = root.querySelector('[data-role="current-player-banner"]');
     const soundToggle = root.querySelector('[data-role="sound-toggle"]');
     const turnPill = root.querySelector('[data-role="turn-pill"]');
 
     expect(root.textContent).toContain('小船长');
     expect(root.textContent).toContain('第 4 回合');
+    expect(root.textContent).toContain('第 18 格');
     expect(root.querySelector('[data-role="roll-action"]')).not.toBeNull();
     expect(root.querySelector('[data-role="hud-toggle"]')).not.toBeNull();
     expect(turnPill).not.toBeNull();
     expect(turnPill?.textContent).toContain('小船长');
-    expect(root.querySelector('.hud-mini__current-badge')?.textContent).toBe(getPlayerBadgeText('小船长', 1));
-    expect(root.querySelector('.hud-legend__badge')?.textContent).toBe(getPlayerBadgeText('小船长', 1));
+    expect(turnPill?.textContent).toContain('第 4 回合');
+    expect(root.querySelector('.hud-turn-pill__avatar')?.textContent).toBe(getPlayerBadgeText('小船长', 1));
     expect(drawer).not.toBeNull();
     expect(drawer?.hasAttribute('open')).toBe(false);
-    expect(currentPlayerBanner).not.toBeNull();
-    expect(currentPlayerBanner?.contains(soundToggle)).toBe(true);
-    expect(drawer?.contains(root.querySelector('[data-role="current-player-banner"]'))).toBe(true);
-    expect(drawer?.contains(root.querySelector('[data-role="player-legend"]'))).toBe(true);
-    expect(drawer?.contains(root.querySelector('[data-role="event-note"]'))).toBe(true);
-    expect(root.querySelector('[data-role="zone-objective-card"]')).toBeNull();
-    expect(root.querySelector('[data-role="crew-strip"]')).toBeNull();
+    expect(root.querySelector('[data-role="current-player-banner"]')).toBeNull();
+    expect(root.querySelector('[data-role="player-legend"]')).toBeNull();
+    expect(root.querySelector('[data-role="event-note"]')).toBeNull();
+    expect(root.querySelector('[data-role="help-action"]')).not.toBeNull();
+    expect(root.querySelector('[data-role="restart-action"]')).not.toBeNull();
     expect(soundToggle).not.toBeNull();
   });
 
@@ -69,5 +67,24 @@ describe('game HUD', () => {
     expect(rollButton?.dataset.motion).toBe('rolling');
     expect(rollButton?.textContent).toContain('摇骰中');
     expect(rollButton?.textContent).toContain('5');
+  });
+
+  it('renders the top-left current-player pill even before any dice roll happens', () => {
+    const root = document.createElement('div');
+
+    renderGameHud(root, {
+      state: {
+        turnNumber: 1,
+        currentPlayer: { id: 'crew-1', name: '小船长', color: '#ff6b6b', position: 1 },
+        crew: [
+          { id: 'crew-1', name: '小船长', color: '#ff6b6b', position: 1 },
+          { id: 'crew-2', name: '海盗甲', color: '#4ecdc4', position: 1 },
+        ],
+        recentEvent: { title: '准备出航' },
+      },
+    });
+
+    expect(root.querySelector('[data-role="turn-pill"]')).not.toBeNull();
+    expect(root.querySelector('[data-role="turn-pill"]')?.textContent).toContain('第 1 回合');
   });
 });

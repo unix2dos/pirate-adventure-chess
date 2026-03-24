@@ -74,10 +74,16 @@ describe('mobile game layout', () => {
   it('defines portrait-specific mobile rules and dynamic viewport sizing for the game scene', () => {
     const baseCss = readProjectFile('../../src/styles/base.css');
     const layoutCss = readProjectFile('../../src/styles/layout.css');
+    const scenesCss = readProjectFile('../../src/styles/scenes.css');
 
     expect(baseCss).toContain('100dvh');
     expect(layoutCss).toContain('@media (max-width: 640px) and (orientation: portrait)');
     expect(layoutCss).toContain('.hud-stage-shell');
     expect(layoutCss).toContain('position: static');
+    expect(layoutCss).toContain('width: min(100vw');
+    expect(layoutCss).toContain('max-height: var(--app-height)');
+    expect(scenesCss).toContain('--scene-padding: 0');
+    expect(scenesCss).not.toContain('border: 14px solid #c79258');
+    expect(scenesCss).not.toContain('inset: 14px');
   });
 });

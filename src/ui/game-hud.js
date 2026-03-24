@@ -1,33 +1,28 @@
 import { getPlayerBadgeText } from '../core/players.js';
 
-function renderLegendItems(crew, currentPlayerId) {
-  return crew
-    .map((member, index) => {
-      const active = member.id === currentPlayerId;
-      const badgeText = getPlayerBadgeText(member.name, index + 1);
-      return `
-        <li class="hud-legend__item" data-active="${active}" style="--crew-color:${member.color ?? '#ff6b6b'};">
-          <span class="hud-legend__left">
-            <span class="hud-legend__badge">${badgeText}</span>
-            <span class="hud-legend__name">${member.name}</span>
-          </span>
-          <span class="hud-legend__meta">第 ${member.position ?? 1} 格</span>
-        </li>
-      `;
-    })
-    .join('');
+function buildRecentRollSummary(recentRolls = []) {
+  if (!Array.isArray(recentRolls) || recentRolls.length === 0) {
+    return '最近还没有掷骰结果';
+  }
+
+  return recentRolls
+    .slice(0, 2)
+    .map((entry) => `${entry.playerName ?? '船长'} ${Number(entry.roll) || 0} 点`)
+    .join('，');
 }
 
 export function renderGameHud(root, { state }) {
   const currentPlayer = state.currentPlayer ?? { id: 'crew-1', name: '待命船员', color: '#ff6b6b' };
   const crew = Array.isArray(state.crew) && state.crew.length > 0 ? state.crew : [currentPlayer];
   const recentEventTitle = state.recentEvent?.title ?? '准备出航';
+  const recentRolls = Array.isArray(state.recentRolls) ? state.recentRolls : [];
   const turnLabel = typeof state.turnNumber === 'number' ? `第 ${state.turnNumber} 回合` : '冒险进行中';
   const soundLabel = state.soundMuted ? '静音中' : '声音开';
   const currentPlayerNumber = Math.max(1, crew.findIndex(({ id }) => id === currentPlayer.id) + 1);
   const currentPlayerBadge = getPlayerBadgeText(currentPlayer.name, currentPlayerNumber);
   const motionPhase = state.animation?.phase ?? 'idle';
   const diceValue = Number.isFinite(state.animation?.diceValue) ? state.animation.diceValue : null;
+  const rollSummaryLabel = buildRecentRollSummary(recentRolls);
   const actionTitle = state.pendingEvent
     ? '先处理这次遭遇，再继续出航'
     : state.gameOver
@@ -38,7 +33,7 @@ export function renderGameHud(root, { state }) {
           ? '小船长正在一格一格往前冲'
           : motionPhase === 'landing'
             ? '马上要停下来了，看看踩中了什么'
-      : '掷骰出航，看看下一站会撞见什么';
+            : '掷骰出航，看看下一站会撞见什么';
   const actionLabel = state.gameOver
     ? '终点'
     : motionPhase === 'rolling'
@@ -53,7 +48,7 @@ export function renderGameHud(root, { state }) {
 
   root.innerHTML = `
     <div aria-live="polite" class="sr-only">
-      ${turnLabel}。${currentPlayer.name}。${actionTitle}。${recentEventTitle}
+      最近掷骰：${rollSummaryLabel}。轮到 ${currentPlayer.name}。${turnLabel}。${actionTitle}。${recentEventTitle}
     </div>
     <aside data-scene="game-hud" class="hud-float">
       <div class="hud-turn-pill" data-role="turn-pill" style="--current-player:${currentPlayer.color};">
@@ -61,19 +56,20 @@ export function renderGameHud(root, { state }) {
         <span class="hud-turn-pill__stack">
           <span class="hud-turn-pill__eyebrow">${turnLabel}</span>
           <strong class="hud-turn-pill__name">${currentPlayer.name}</strong>
+          <span class="hud-turn-pill__meta">第 ${currentPlayer.position ?? 1} 格</span>
         </span>
       </div>
 
       <details class="hud-drawer" data-role="hud-drawer">
         <summary class="hud-drawer__toggle" data-role="hud-toggle">
-          航海卡
+          设置
         </summary>
         <div class="hud-drawer__sheet">
-          <section data-role="current-player-banner" class="hud-drawer__panel hud-drawer__panel--turn" style="--current-player:${currentPlayer.color};">
-            <div class="hud-mini__bar">
-              <p class="hud-mini__eyebrow">${turnLabel}</p>
+          <section class="hud-drawer__panel hud-drawer__panel--settings">
+            <p class="hud-mini__eyebrow">设置</p>
+            <div class="hud-settings">
               <button
-                class="action-button action-button--secondary sound-toggle sound-toggle--inline"
+                class="action-button action-button--secondary sound-toggle"
                 data-role="sound-toggle"
                 aria-label="切换声音"
                 aria-pressed="${state.soundMuted ? 'true' : 'false'}"
@@ -82,33 +78,13 @@ export function renderGameHud(root, { state }) {
                 <span class="sound-toggle__icon">${state.soundMuted ? '🔇' : '🔊'}</span>
                 <span class="sound-toggle__text">${soundLabel}</span>
               </button>
+              <button class="action-button action-button--secondary hud-settings__button" data-role="help-action" type="button">
+                规则说明
+              </button>
+              <button class="action-button action-button--secondary hud-settings__button" data-role="restart-action" type="button">
+                重新开始
+              </button>
             </div>
-            <div class="hud-mini__current">
-              <span class="hud-mini__current-badge">${currentPlayerBadge}</span>
-              <div class="hud-mini__current-copy">
-                <strong>${currentPlayer.name}</strong>
-                <span>第 ${currentPlayer.position ?? 1} 格</span>
-              </div>
-            </div>
-          </section>
-
-          <section data-role="player-legend" class="hud-drawer__panel hud-drawer__panel--legend">
-            <p class="hud-mini__eyebrow">玩家</p>
-            <ul class="hud-legend">
-              ${renderLegendItems(crew, currentPlayer.id)}
-            </ul>
-          </section>
-
-          <section class="hud-drawer__panel hud-drawer__panel--event">
-            <p class="hud-mini__eyebrow">最近</p>
-            <p class="hud-mini__event" data-role="event-note">
-              <span class="hud-mini__event-text">${recentEventTitle}</span>
-            </p>
-          </section>
-
-          <section class="hud-drawer__panel hud-drawer__panel--hint">
-            <p class="hud-mini__eyebrow">提示</p>
-            <p class="hud-drawer__hint">${actionTitle}</p>
           </section>
         </div>
       </details>

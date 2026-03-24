@@ -94,6 +94,17 @@
   }
 }
 
+@keyframes finishBeacon {
+  0%,
+  100% {
+    filter: drop-shadow(0 18px 30px rgba(222, 162, 58, 0.22));
+  }
+
+  50% {
+    filter: drop-shadow(0 22px 40px rgba(255, 190, 82, 0.34));
+  }
+}
+
 @keyframes tileSpark {
   0%,
   100% {
@@ -151,6 +162,10 @@
 .board-player-chip--landing,
 .board-player-chip--result {
   animation: landingFlash 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.board-center-sign {
+  animation: finishBeacon 2.8s ease-in-out infinite;
 }
 
 .board-cell-label--trail,

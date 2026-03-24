@@ -1,3 +1,5 @@
+import { boardEventCards } from './events.js';
+
 export const zoneOrder = ['harbor-run', 'reef-rise', 'spiral-bay', 'treasure-core'];
 
 const zoneMetaById = {
@@ -66,19 +68,6 @@ const routeWaypoints = [
   { x: 0.62, y: 0.45 },
   { x: 0.57, y: 0.39 },
   { x: 0.52, y: 0.46 },
-];
-
-const boardStickerSpecs = [
-  { id: 'wish-star', cell: 14, text: '许愿星', detail: '+1 或 +2', offsetX: 0, offsetY: 0.08, rotation: -4, style: 'star' },
-  { id: 'bonus-roll', cell: 27, text: '幸运骰', detail: '再掷一次', offsetX: 0.05, offsetY: 0.06, rotation: -8, style: 'dice' },
-  { id: 'gem-reef', cell: 36, text: '宝石礁', detail: '闪闪发光', offsetX: 0.08, offsetY: -0.01, rotation: -8, style: 'gem' },
-  { id: 'octopus', cell: 46, text: '章鱼海怪', detail: '小心触手', offsetX: 0.06, offsetY: -0.03, rotation: -12, style: 'octopus' },
-  { id: 'shark-bite', cell: 55, text: '鲨鱼湾', detail: '沿岸绕行', offsetX: 0.02, offsetY: -0.08, rotation: -8, style: 'shark' },
-  { id: 'bridge', cell: 60, text: '木桥近道', detail: '穿过海湾', offsetX: 0.04, offsetY: -0.08, rotation: -4, style: 'bridge' },
-  { id: 'whirlpool', cell: 66, text: '旋涡海流', detail: '贴边滑行', offsetX: -0.02, offsetY: -0.08, rotation: 4, style: 'swirl' },
-  { id: 'pirate', cell: 72, text: '海盗靠岸', detail: '热闹一下', offsetX: -0.09, offsetY: -0.03, rotation: 8, style: 'pirate' },
-  { id: 'ladder', cell: 78, text: '梯桥近路', detail: '一路向上', offsetX: -0.09, offsetY: 0.02, rotation: 8, style: 'ladder' },
-  { id: 'inner-swirl', cell: 86, text: '内海旋涡', detail: '靠近宝箱', offsetX: -0.10, offsetY: -0.02, rotation: -8, style: 'swirl' },
 ];
 
 function interpolateValue(start, end, progress) {
@@ -161,33 +150,78 @@ function getZoneId(index) {
   return 'treasure-core';
 }
 
-const landmarkCells = new Set(boardStickerSpecs.map(({ cell }) => cell).concat([100]));
+const landmarkCells = new Set(boardEventCards.map(({ cell }) => cell).concat([100]));
+const landmarkStyleByCell = new Map(boardEventCards.map(({ cell, style }) => [cell, style]));
 const sampledRoutePoints = Array.from({ length: 100 }, (_, offset) => getRoutePointByProgress(offset / 99));
+const finishSprintOverrides = new Map([
+  [100, { x: 0.53, y: 0.48 }],
+]);
 
-export const boardPath = sampledRoutePoints.map((point, offset) => {
+function getRoutePoint(index) {
+  return finishSprintOverrides.get(index) ?? sampledRoutePoints[index - 1];
+}
+
+function deriveRotationFromNeighbors(points, index) {
+  const current = points[index];
+  const previous = points[index - 1] ?? current;
+  const next = points[index + 1] ?? current;
+  const deltaX = next.x - previous.x;
+  const deltaY = next.y - previous.y;
+
+  if (deltaX === 0 && deltaY === 0) {
+    return 0;
+  }
+
+  return normalizeRotation((Math.atan2(deltaY, deltaX) * 180) / Math.PI);
+}
+
+const routePoints = sampledRoutePoints.map((_, offset) => {
   const index = offset + 1;
+  return {
+    index,
+    ...getRoutePoint(index),
+  };
+});
+
+export const boardPath = routePoints.map((routePoint, offset, points) => {
+  const { index } = routePoint;
   const zoneId = getZoneId(index);
   const zoneMeta = zoneMetaById[zoneId];
+  const rotation = Number.isFinite(routePoint.rotation)
+    ? routePoint.rotation
+    : deriveRotationFromNeighbors(points, offset);
 
   return {
     index,
     zoneId,
     zoneLabel: zoneMeta.label,
     objective: zoneMeta.objective,
-    x: point.x,
-    y: point.y,
-    rotation: point.rotation ?? 0,
+    x: routePoint.x,
+    y: routePoint.y,
+    rotation,
     kind: index === 100 ? 'finish' : landmarkCells.has(index) ? 'landmark' : 'route',
+    landmarkStyle: landmarkStyleByCell.get(index) ?? null,
   };
 });
 
-export const boardStickers = boardStickerSpecs.map((sticker) => {
-  const point = sampledRoutePoints[sticker.cell - 1];
+export const boardStickers = boardEventCards.map((eventCard) => {
+  const point = getRoutePoint(eventCard.cell);
 
   return {
-    ...sticker,
-    x: clamp(point.x + sticker.offsetX, 0.05, 0.96),
-    y: clamp(point.y + sticker.offsetY, 0.06, 0.94),
+    id: eventCard.stickerId,
+    eventId: eventCard.id,
+    cell: eventCard.cell,
+    text: eventCard.title,
+    detail: eventCard.detail,
+    trigger: eventCard.trigger,
+    effectText: eventCard.effectText,
+    example: eventCard.example,
+    style: eventCard.style,
+    rotation: eventCard.rotation,
+    x: clamp(point.x + eventCard.offsetX, 0.05, 0.96),
+    y: clamp(point.y + eventCard.offsetY, 0.06, 0.94),
+    cellX: point.x,
+    cellY: point.y,
   };
 });
 

@@ -33,24 +33,30 @@
   width: 100%;
   margin: 0 auto;
   display: grid;
-  min-height: calc(var(--app-height) - var(--scene-block-gutter));
+  min-height: var(--app-height);
   place-items: center;
 }
 
 .game-stage {
   position: relative;
   display: grid;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
+  max-height: var(--app-height);
   justify-self: center;
 }
 
 .scene-panel {
   border-radius: 32px;
   padding: clamp(1.25rem, 2vw, 2rem);
-  background: color-mix(in oklab, white 76%, var(--bg-sand));
-  box-shadow: var(--shadow-lg);
-  border: 1px solid color-mix(in oklab, var(--coral) 10%, white);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 246, 229, 0.9)),
+    linear-gradient(135deg, rgba(255, 212, 135, 0.14), rgba(110, 221, 255, 0.1));
+  box-shadow:
+    0 28px 70px rgba(30, 66, 107, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(12px);
 }
 
 .stack {
@@ -60,13 +66,13 @@
 
 .board-stage-shell {
   position: relative;
-  width: min(calc(100vw - var(--scene-inline-gutter)), calc((var(--app-height) - var(--scene-block-gutter)) * 1.6));
+  width: min(100vw, calc(var(--app-height) * 1.72));
   aspect-ratio: 16 / 10;
   min-height: 0;
+  max-height: var(--app-height);
   max-width: 100%;
-  border-radius: 32px;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
   justify-self: center;
 }
 
@@ -102,7 +108,7 @@
   }
 
   .board-stage-shell {
-    width: min(calc(100vw - var(--scene-inline-gutter)), calc((var(--app-height) - var(--scene-block-gutter)) * 1.35));
+    width: min(100vw, calc(var(--app-height) * 1.38));
     aspect-ratio: 5 / 4;
   }
 }
@@ -118,7 +124,7 @@
   }
 
   .board-stage-shell {
-    width: min(calc(100vw - var(--scene-inline-gutter)), calc((var(--app-height) - var(--scene-block-gutter)) * 1.1));
+    width: min(100vw, calc(var(--app-height) * 1.08));
     aspect-ratio: 11 / 10;
   }
 }
@@ -129,7 +135,7 @@
   }
 
   .game-layout {
-    min-height: auto;
+    min-height: var(--app-height);
     place-items: start stretch;
     align-content: start;
   }
@@ -141,6 +147,7 @@
 
   .board-stage-shell {
     width: 100%;
+    max-height: none;
   }
 
   .hud-stage-shell {

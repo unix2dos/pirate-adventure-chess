@@ -9,6 +9,7 @@ export function createGameEngine({ players, rollDice }) {
     pendingEvent: null,
     recentEvent: null,
     lastAction: null,
+    recentRolls: [],
   };
 
   function createTrail(from, to) {
@@ -30,7 +31,25 @@ export function createGameEngine({ players, rollDice }) {
     return structuredClone(state);
   }
 
+  function trackRecentRoll(player, roll) {
+    state.recentRolls = [
+      {
+        playerId: player.id,
+        playerName: player.name,
+        roll,
+        turnNumber: state.turnNumber,
+      },
+      ...state.recentRolls,
+    ].slice(0, 2);
+  }
+
   function advanceTurn() {
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    if ((currentPlayer?.extraTurns ?? 0) > 0) {
+      currentPlayer.extraTurns -= 1;
+      return;
+    }
+
     state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
     if (state.currentPlayerIndex === 0) {
       state.turnNumber += 1;
@@ -59,13 +78,20 @@ export function createGameEngine({ players, rollDice }) {
 
     const roll = await rollDice();
     const from = player.position;
-    const moveBy = roll + (player.turtleBuff > 0 ? 1 : 0);
-    const bonusStep = player.turtleBuff > 0 ? 1 : 0;
+    const pendingRollModifier = Number.isFinite(player.rollModifier) ? player.rollModifier : 0;
+    const legacyBonus = player.turtleBuff > 0 ? 1 : 0;
+    const appliedModifier = pendingRollModifier !== 0 ? pendingRollModifier : legacyBonus;
+    const moveBy = Math.max(1, roll + appliedModifier);
+    const bonusStep = appliedModifier > 0 ? appliedModifier : 0;
     if (player.turtleBuff > 0) {
       player.turtleBuff -= 1;
     }
+    if (pendingRollModifier !== 0) {
+      player.rollModifier = 0;
+    }
 
     player.position = Math.min(100, player.position + moveBy);
+    trackRecentRoll(player, roll);
     state.lastAction = {
       type: 'move',
       playerId: player.id,

@@ -1,7 +1,6 @@
 import { getCellMeta } from '../core/board-data.js';
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
-const LINK_PHASES = new Set(['rolling', 'moving', 'landing', 'result']);
 
 function getOrCreateCanvas(root) {
   let canvas = root.querySelector('[data-role="animation-canvas"]');
@@ -18,13 +17,6 @@ function toCanvasPoint(cell, width, height) {
   return {
     x: cell.x * width,
     y: cell.y * height,
-  };
-}
-
-function getDiceOrigin(width, height) {
-  return {
-    x: width - 108,
-    y: height - 108,
   };
 }
 
@@ -122,8 +114,64 @@ function drawLandingBurst(ctx, width, height, position, phase) {
   ctx.restore();
 }
 
-function drawDiceLink(ctx, width, height, animation = {}) {
-  if (!LINK_PHASES.has(animation?.phase)) {
+function drawTrailParticles(ctx, width, height, trail = [], phase = 'idle') {
+  if (!Array.isArray(trail) || trail.length === 0 || (phase !== 'moving' && phase !== 'landing' && phase !== 'result')) {
+    return;
+  }
+
+  ctx.save();
+  trail
+    .map((position) => getCellMeta(position))
+    .filter(Boolean)
+    .forEach((cell, index) => {
+      const point = toCanvasPoint(cell, width, height);
+      const burst = index === trail.length - 1 ? 5 : 3;
+      for (let spark = 0; spark < burst; spark += 1) {
+        const angle = ((Math.PI * 2) / burst) * spark + index * 0.4;
+        const distance = index === trail.length - 1 ? 22 : 12;
+        const sparkX = point.x + Math.cos(angle) * distance;
+        const sparkY = point.y + Math.sin(angle) * distance;
+        ctx.fillStyle = index === trail.length - 1
+          ? 'rgba(255, 247, 214, 0.9)'
+          : 'rgba(255, 232, 164, 0.56)';
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, index === trail.length - 1 ? 3 : 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  ctx.restore();
+}
+
+function drawLandingRays(ctx, width, height, position, phase) {
+  const cell = getCellMeta(position);
+  if (!cell || (phase !== 'landing' && phase !== 'result')) {
+    return;
+  }
+
+  const point = toCanvasPoint(cell, width, height);
+  ctx.save();
+  ctx.strokeStyle = phase === 'landing' ? 'rgba(255, 207, 120, 0.74)' : 'rgba(255, 242, 194, 0.72)';
+  ctx.lineWidth = 2.6;
+  for (let index = 0; index < 8; index += 1) {
+    const angle = (Math.PI * 2 * index) / 8;
+    const startRadius = 30;
+    const endRadius = phase === 'landing' ? 48 : 42;
+    ctx.beginPath();
+    ctx.moveTo(
+      point.x + Math.cos(angle) * startRadius,
+      point.y + Math.sin(angle) * startRadius,
+    );
+    ctx.lineTo(
+      point.x + Math.cos(angle) * endRadius,
+      point.y + Math.sin(angle) * endRadius,
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawRollingAura(ctx, width, height, animation = {}) {
+  if (animation?.phase !== 'rolling') {
     return;
   }
 
@@ -132,61 +180,14 @@ function drawDiceLink(ctx, width, height, animation = {}) {
     return;
   }
 
-  const origin = getDiceOrigin(width, height);
   const point = toCanvasPoint(cell, width, height);
-  const distanceX = origin.x - point.x;
-  const controlX = origin.x - Math.max(120, Math.abs(distanceX) * 0.42);
-  const controlY = Math.min(origin.y, point.y) - (animation.phase === 'rolling' ? 130 : 88);
-
   ctx.save();
-  const linkGradient = ctx.createLinearGradient(origin.x, origin.y, point.x, point.y);
-  linkGradient.addColorStop(0, 'rgba(255, 173, 101, 0.08)');
-  linkGradient.addColorStop(0.42, 'rgba(255, 255, 255, 0.34)');
-  linkGradient.addColorStop(1, animation.phase === 'rolling' ? 'rgba(255, 242, 177, 0.78)' : 'rgba(255, 239, 197, 0.58)');
-  ctx.strokeStyle = linkGradient;
-  ctx.lineWidth = animation.phase === 'rolling' ? 8 : 6;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.setLineDash(animation.phase === 'rolling' ? [16, 14] : []);
-  ctx.beginPath();
-  ctx.moveTo(origin.x, origin.y);
-  ctx.quadraticCurveTo(controlX, controlY, point.x, point.y);
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-  ctx.fillStyle = animation.phase === 'rolling' ? 'rgba(255, 255, 255, 0.64)' : 'rgba(255, 246, 212, 0.42)';
-  [0.24, 0.5, 0.76].forEach((progress) => {
-    const inverse = 1 - progress;
-    const sparkX = inverse * inverse * origin.x + 2 * inverse * progress * controlX + progress * progress * point.x;
-    const sparkY = inverse * inverse * origin.y + 2 * inverse * progress * controlY + progress * progress * point.y;
+  ctx.strokeStyle = 'rgba(255, 234, 157, 0.34)';
+  ctx.lineWidth = 2.4;
+  for (let index = 0; index < 3; index += 1) {
+    const radius = 26 + index * 9;
     ctx.beginPath();
-    ctx.arc(sparkX, sparkY, animation.phase === 'rolling' ? 3.4 : 2.6, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.restore();
-}
-
-function drawDiceSpark(ctx, width, height, animation = {}) {
-  if (animation?.phase !== 'rolling') {
-    return;
-  }
-
-  const { x, y } = getDiceOrigin(width, height);
-  ctx.save();
-  const glow = ctx.createRadialGradient(x, y, 8, x, y, 56);
-  glow.addColorStop(0, 'rgba(255, 255, 255, 0.62)');
-  glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(x, y, 56, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = 'rgba(255, 227, 130, 0.56)';
-  ctx.lineWidth = 3;
-  for (let index = 0; index < 4; index += 1) {
-    const radius = 22 + index * 9;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
@@ -218,11 +219,18 @@ export function renderAnimationLayer(root, { state = {}, size = DEFAULT_SIZE } =
 
   ctx.clearRect(0, 0, size.width, size.height);
   drawVignette(ctx, size.width, size.height);
-  drawDiceLink(ctx, size.width, size.height, state.animation);
   drawTrailGlow(ctx, size.width, size.height, state.animation?.trail ?? []);
-  drawDiceSpark(ctx, size.width, size.height, state.animation);
+  drawTrailParticles(ctx, size.width, size.height, state.animation?.trail ?? [], state.animation?.phase ?? 'idle');
+  drawRollingAura(ctx, size.width, size.height, state.animation);
   drawPulse(ctx, size.width, size.height, state.animation?.activeCell ?? state.currentPlayer?.position ?? 1);
   drawLandingBurst(
+    ctx,
+    size.width,
+    size.height,
+    state.animation?.landedCell ?? state.animation?.activeCell,
+    state.animation?.phase,
+  );
+  drawLandingRays(
     ctx,
     size.width,
     size.height,

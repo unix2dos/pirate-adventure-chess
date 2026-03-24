@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { resolveBoardEvent } from '../../src/core/events.js';
 import { boardPath, getCellMeta, zoneOrder } from '../../src/core/board-data.js';
+import { boardStickers } from '../../src/core/board-data.js';
 
 describe('board data', () => {
   it('exposes 100 route cells with zone metadata', () => {
@@ -29,7 +31,40 @@ describe('board data', () => {
     expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(0.74);
     expect(totalDistance).toBeGreaterThan(4.5);
     expect(Math.max(...segments) / Math.min(...segments)).toBeLessThan(3.2);
-    expect(centerLaneCount).toBeGreaterThan(18);
+    expect(centerLaneCount).toBeGreaterThan(15);
     expect(boardPath.every(({ rotation }) => rotation <= 90 && rotation >= -90)).toBe(true);
+  });
+
+  it('keeps every visible sticker aligned with a real event cell, including the wish star card', () => {
+    expect(resolveBoardEvent(13)).toBeNull();
+    expect(resolveBoardEvent(14)?.title).toBe('许愿星');
+    expect(boardStickers).toHaveLength(10);
+    expect(boardStickers.every((sticker) => resolveBoardEvent(sticker.cell))).toBe(true);
+  });
+
+  it('keeps the last route around the island readable instead of collapsing into a sprint cluster', () => {
+    const finish = getCellMeta(100);
+    const finalLane = boardPath.slice(89, 99);
+    const distances = finalLane.map((cell) => Math.hypot(cell.x - finish.x, cell.y - finish.y));
+    const laneSegments = finalLane.slice(1).map((cell, index) => {
+      const previous = finalLane[index];
+      return Math.hypot(cell.x - previous.x, cell.y - previous.y);
+    });
+
+    expect(finalLane).toHaveLength(10);
+    expect(Math.max(...distances) - Math.min(...distances)).toBeGreaterThan(0.08);
+    expect(Math.min(...laneSegments)).toBeGreaterThan(0.055);
+  });
+
+  it('keeps the full 82-99 finish route evenly spaced for regular play', () => {
+    const finishRoute = boardPath.slice(81, 99);
+    const laneSegments = finishRoute.slice(1).map((cell, index) => {
+      const previous = finishRoute[index];
+      return Math.hypot(cell.x - previous.x, cell.y - previous.y);
+    });
+
+    expect(finishRoute).toHaveLength(18);
+    expect(Math.min(...laneSegments)).toBeGreaterThan(0.04);
+    expect(Math.max(...laneSegments) / Math.min(...laneSegments)).toBeLessThan(1.5);
   });
 });

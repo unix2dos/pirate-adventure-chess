@@ -36,6 +36,8 @@ export function createPlayer({ id, name, color, isAI = false }) {
     position: 1,
     skipTurns: 0,
     turtleBuff: 0,
+    extraTurns: 0,
+    rollModifier: 0,
   };
 }
 

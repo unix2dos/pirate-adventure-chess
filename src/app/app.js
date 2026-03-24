@@ -2,11 +2,13 @@ import { createSceneManager } from './scene-manager.js';
 import { renderStartScreen } from '../ui/start-screen.js';
 import { createGameEngine } from '../core/game-engine.js';
 import { getCellMeta } from '../core/board-data.js';
+import { getBoardEventById } from '../core/events.js';
 import { createPlayer } from '../core/players.js';
 import { renderBoardRenderer } from '../render/board-renderer.js';
 import { renderAnimationLayer } from '../render/animation-layer.js';
 import { renderGameHud } from '../ui/game-hud.js';
 import { renderEventOverlay } from '../ui/event-overlay.js';
+import { renderInfoOverlay } from '../ui/info-overlay.js';
 import { renderWinScreen } from '../ui/win-screen.js';
 import { createAudioEngine } from '../audio/audio-engine.js';
 
@@ -72,6 +74,7 @@ function createHudState(engineState, recentTitle = '准备出航', overrides = {
     recentEvent: hasOwnOverride(overrides, 'recentEvent')
       ? overrides.recentEvent
       : engineState.recentEvent ?? { title: recentTitle },
+    recentRolls: hasOwnOverride(overrides, 'recentRolls') ? overrides.recentRolls : engineState.recentRolls ?? [],
     crew,
     gameOver: hasOwnOverride(overrides, 'gameOver') ? overrides.gameOver : engineState.gameOver,
     pendingEvent: hasOwnOverride(overrides, 'pendingEvent') ? overrides.pendingEvent : engineState.pendingEvent,
@@ -104,7 +107,7 @@ function createWinPayload(engineState, onReplay) {
 }
 
 function renderGameScene(root, payload = {}) {
-  const { engine, onWin, soundEngine } = payload;
+  const { engine, onWin, onRestart, soundEngine } = payload;
   function deriveHudState(engineState, recentTitle = '准备出航', overrides = {}) {
     return createHudState(engineState, recentTitle, {
       soundMuted: soundEngine?.isMuted?.() ?? false,
@@ -115,6 +118,7 @@ function renderGameScene(root, payload = {}) {
   let sceneState = payload.state ?? (engine ? deriveHudState(engine.getState()) : null);
   let isAnimatingTurn = false;
   let aiTurnTimeoutId = null;
+  let infoOverlay = null;
 
   root.innerHTML = `
     <section data-scene="game" class="scene-shell game-scene">
@@ -137,6 +141,59 @@ function renderGameScene(root, payload = {}) {
       globalThis.clearTimeout(aiTurnTimeoutId);
       aiTurnTimeoutId = null;
     }
+  }
+
+  function getInfoOverlayLayout() {
+    return globalThis.matchMedia?.('(max-width: 640px)').matches ? 'sheet' : 'anchored';
+  }
+
+  function buildStickerAnchor(button) {
+    if (!button) {
+      return null;
+    }
+
+    const overlayRect = overlayStage.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    const cardWidth = 320;
+    const preferredLeft = buttonRect.left - overlayRect.left + buttonRect.width + 18;
+    const fallbackLeft = buttonRect.left - overlayRect.left - cardWidth - 18;
+    const left = preferredLeft + cardWidth <= overlayRect.width
+      ? preferredLeft
+      : Math.max(16, fallbackLeft);
+    const top = Math.max(
+      16,
+      Math.min(overlayRect.height - 220, buttonRect.top - overlayRect.top - 12),
+    );
+
+    return {
+      left,
+      top,
+      maxWidth: cardWidth,
+    };
+  }
+
+  function buildStickerDetail(eventCard) {
+    if (!eventCard) {
+      return null;
+    }
+
+    return {
+      eyebrow: '格子规则',
+      title: eventCard.title,
+      cell: eventCard.cell,
+      trigger: eventCard.trigger,
+      effectText: eventCard.effectText,
+      example: eventCard.example,
+    };
+  }
+
+  function openInfoOverlay(detail, options = {}) {
+    infoOverlay = {
+      detail,
+      layout: options.layout ?? getInfoOverlayLayout(),
+      anchor: options.anchor ?? null,
+    };
+    renderFrame();
   }
 
   async function playTurnSequence(turnStartState, nextEngineState) {
@@ -298,6 +355,7 @@ function renderGameScene(root, payload = {}) {
     }
 
     isAnimatingTurn = true;
+    infoOverlay = null;
     const nextEngineState = await engine.takeTurn();
     await playTurnSequence(turnStartState, nextEngineState);
     isAnimatingTurn = false;
@@ -329,6 +387,17 @@ function renderGameScene(root, payload = {}) {
           }
 
           sceneState = deriveHudState(nextEngineState);
+          infoOverlay = null;
+          renderFrame();
+        },
+      });
+    } else if (infoOverlay) {
+      renderInfoOverlay(overlayStage, {
+        detail: infoOverlay.detail,
+        layout: infoOverlay.layout,
+        anchor: infoOverlay.anchor,
+        onClose() {
+          infoOverlay = null;
           renderFrame();
         },
       });
@@ -347,6 +416,44 @@ function renderGameScene(root, payload = {}) {
         renderFrame();
       }, { once: true });
     }
+
+    const helpButton = hudStage.querySelector('[data-role="help-action"]');
+    if (helpButton) {
+      helpButton.addEventListener('click', () => {
+        openInfoOverlay({
+          eyebrow: '规则说明',
+          title: '规则说明',
+          trigger: '点击挂卡可以提前查看对应格子的规则。',
+          effectText: '设置里可以调声音、重新开始；真正踩到对应格子时，会按照挂卡说明稳定触发效果。',
+          example: '例如“幸运骰”会让当前玩家再掷一次，“宝石礁”会让下回合多走 1 格。',
+        }, {
+          layout: 'sheet',
+        });
+      }, { once: true });
+    }
+
+    const restartButton = hudStage.querySelector('[data-role="restart-action"]');
+    if (restartButton && typeof onRestart === 'function') {
+      restartButton.addEventListener('click', () => {
+        clearAiTurnTimeout();
+        infoOverlay = null;
+        onRestart();
+      }, { once: true });
+    }
+
+    boardStage.querySelectorAll('[data-board-sticker]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const eventCard = getBoardEventById(button.dataset.eventId);
+        const detail = buildStickerDetail(eventCard);
+        if (!detail) {
+          return;
+        }
+
+        openInfoOverlay(detail, {
+          anchor: getInfoOverlayLayout() === 'anchored' ? buildStickerAnchor(button) : null,
+        });
+      }, { once: true });
+    });
 
     const rollButton = hudStage.querySelector('[data-role="roll-action"]');
     const isMotionPhase = Boolean(sceneState.animation?.phase && sceneState.animation.phase !== 'idle');
@@ -379,6 +486,7 @@ function renderGameScene(root, payload = {}) {
 
     rollButton.addEventListener('click', async () => {
       rollButton.disabled = true;
+      infoOverlay = null;
       await performTurn();
     }, { once: true });
   }
@@ -421,6 +529,7 @@ export function createApp(root, options = {}) {
           engine,
           soundEngine,
           state: createHudState(engine.getState(), '扬帆起航', { soundMuted: soundEngine.isMuted() }),
+          onRestart: showStartScene,
           onWin(engineState) {
             sceneManager.showWin(createWinPayload(engineState, showStartScene));
           },
