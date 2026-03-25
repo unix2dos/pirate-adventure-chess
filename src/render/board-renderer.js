@@ -25,6 +25,9 @@ const INNER_RING_END = 99;
 const PROP_SHORT_NAMES = new Map(
   boardStickers.map((sticker) => [sticker.cell, sticker.text]),
 );
+const PROP_EVENT_IDS = new Map(
+  boardStickers.map((sticker) => [sticker.cell, sticker.eventId]),
+);
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -109,53 +112,80 @@ const DISPLAY_PATH = boardPath.map((cell) => {
 const DISPLAY_PATH_BY_INDEX = new Map(DISPLAY_PATH.map((cell) => [cell.index, cell]));
 
 function drawBoardWater(ctx, width, height) {
+  // Rich ocean gradient
   const seaGradient = ctx.createLinearGradient(0, 0, 0, height);
-  seaGradient.addColorStop(0, '#73c8ff');
-  seaGradient.addColorStop(0.42, '#68c2ff');
-  seaGradient.addColorStop(1, '#9be8ff');
+  seaGradient.addColorStop(0, '#5abef5');
+  seaGradient.addColorStop(0.3, '#63caff');
+  seaGradient.addColorStop(0.7, '#7ed8ff');
+  seaGradient.addColorStop(1, '#aaeeff');
   ctx.fillStyle = seaGradient;
   ctx.fillRect(0, 0, width, height);
 
-  const horizonGlow = ctx.createRadialGradient(width * 0.5, height * 0.26, 30, width * 0.5, height * 0.26, width * 0.46);
-  horizonGlow.addColorStop(0, 'rgba(255, 250, 214, 0.42)');
-  horizonGlow.addColorStop(1, 'rgba(255, 250, 214, 0)');
+  // Diagonal light shimmer
+  const shimmer = ctx.createLinearGradient(0, 0, width, height);
+  shimmer.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+  shimmer.addColorStop(0.4, 'rgba(255, 255, 255, 0)');
+  shimmer.addColorStop(0.6, 'rgba(255, 255, 255, 0)');
+  shimmer.addColorStop(1, 'rgba(255, 255, 255, 0.06)');
+  ctx.fillStyle = shimmer;
+  ctx.fillRect(0, 0, width, height);
+
+  // Sun glow
+  const horizonGlow = ctx.createRadialGradient(width * 0.5, height * 0.22, 20, width * 0.5, height * 0.22, width * 0.52);
+  horizonGlow.addColorStop(0, 'rgba(255, 252, 200, 0.48)');
+  horizonGlow.addColorStop(0.5, 'rgba(255, 240, 180, 0.18)');
+  horizonGlow.addColorStop(1, 'rgba(255, 240, 180, 0)');
   ctx.fillStyle = horizonGlow;
   ctx.fillRect(0, 0, width, height);
 
+  // Wave layers - two passes for depth
   ctx.save();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.11)';
-  ctx.lineWidth = 2.4;
-  for (let index = 0; index < 6; index += 1) {
-    const y = height * (0.14 + index * 0.14);
-    ctx.beginPath();
-    for (let x = 0; x <= width; x += 30) {
-      const wave = Math.sin((x / width) * Math.PI * 4 + index * 0.65) * 6;
-      if (x === 0) {
-        ctx.moveTo(x, y + wave);
-      } else {
-        ctx.lineTo(x, y + wave);
+  for (let pass = 0; pass < 2; pass += 1) {
+    const alpha = pass === 0 ? 0.09 : 0.14;
+    const amplitude = pass === 0 ? 5 : 3.5;
+    const freq = pass === 0 ? 3.5 : 5.2;
+    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.lineWidth = pass === 0 ? 2.8 : 1.8;
+    for (let index = 0; index < 7; index += 1) {
+      const y = height * (0.1 + index * 0.13 + pass * 0.06);
+      ctx.beginPath();
+      for (let x = 0; x <= width; x += 20) {
+        const wave = Math.sin((x / width) * Math.PI * freq + index * 0.7 + pass * 1.2) * amplitude;
+        const wave2 = Math.sin((x / width) * Math.PI * (freq * 1.6) + index * 1.1) * (amplitude * 0.4);
+        if (x === 0) {
+          ctx.moveTo(x, y + wave + wave2);
+        } else {
+          ctx.lineTo(x, y + wave + wave2);
+        }
       }
+      ctx.stroke();
     }
-    ctx.stroke();
   }
   ctx.restore();
 
+  // Center caustic glow
   ctx.save();
-  const glow = ctx.createRadialGradient(width * 0.52, height * 0.52, 70, width * 0.52, height * 0.52, width * 0.58);
-  glow.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+  const glow = ctx.createRadialGradient(width * 0.52, height * 0.5, 60, width * 0.52, height * 0.5, width * 0.62);
+  glow.addColorStop(0, 'rgba(255, 255, 255, 0.14)');
   glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, width, height);
   ctx.restore();
 
+  // Sparkle dots
   ctx.save();
-  const confettiColors = ['rgba(255, 241, 120, 0.44)', 'rgba(255, 126, 120, 0.28)', 'rgba(121, 212, 255, 0.32)'];
-  for (let index = 0; index < 18; index += 1) {
-    ctx.fillStyle = confettiColors[index % confettiColors.length];
-    const x = width * (0.06 + ((index * 0.051) % 0.88));
-    const y = height * (0.1 + ((index * 0.083) % 0.78));
+  const sparkleColors = [
+    'rgba(255, 250, 200, 0.62)',
+    'rgba(255, 255, 255, 0.5)',
+    'rgba(180, 230, 255, 0.48)',
+  ];
+  for (let index = 0; index < 22; index += 1) {
+    ctx.fillStyle = sparkleColors[index % sparkleColors.length];
+    const x = width * (0.04 + ((index * 0.043) % 0.92));
+    const y = height * (0.06 + ((index * 0.071) % 0.86));
+    const r = 1.5 + (index % 4) * 0.8;
     ctx.beginPath();
-    ctx.arc(x, y, 3 + (index % 3), 0, Math.PI * 2);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -361,7 +391,7 @@ function renderBoardTiles(root, state = {}) {
   Object.assign(tileLayer.style, {
     position: 'absolute',
     inset: '0',
-    pointerEvents: 'none',
+    pointerEvents: 'auto',
     zIndex: '4',
   });
 
@@ -377,13 +407,13 @@ function renderBoardTiles(root, state = {}) {
       const isActive = cell.index === activeCell;
       const isLanded = cell.index === landedCell;
 
-      const cellLabel = isLandmark ? (PROP_SHORT_NAMES.get(cell.index) ?? cell.index) : cell.index;
-      const landmarkIcon = isLandmark ? (STICKER_ICONS[landmarkStyle] ?? '✨') : '';
+      const eventId = isLandmark ? (PROP_EVENT_IDS.get(cell.index) ?? '') : '';
       return `
         <span
           class="board-cell-label ${isLandmark ? 'board-cell-label--landmark' : ''} ${isFinalBend ? 'board-cell-label--final-bend' : ''} ${isFinishLane ? 'board-cell-label--finish-lane' : ''} ${landmarkStyle ? `board-cell-label--landmark-${landmarkStyle}` : ''} ${isCurrent ? 'board-cell-label--current' : ''} ${isTrail ? 'board-cell-label--trail' : ''} ${isActive ? 'board-cell-label--active' : ''} ${isLanded ? 'board-cell-label--landed' : ''}"
           data-cell-label="${cell.index}"
           data-cell-kind="${cell.kind}"
+          data-event-id="${eventId}"
           data-landmark-style="${landmarkStyle ?? ''}"
           data-final-bend="${isFinalBend}"
           data-finish-lane="${isFinishLane}"
@@ -392,9 +422,7 @@ function renderBoardTiles(root, state = {}) {
           data-landed="${isLanded}"
           style="left:${(cell.x * 100).toFixed(2)}%;top:${(cell.y * 100).toFixed(2)}%;--cell-rotation:${cell.rotation.toFixed(2)}deg;"
         >
-          ${isLandmark
-    ? `<span class="board-cell-label__icon" aria-hidden="true">${landmarkIcon}</span><span class="board-cell-label__name">${cellLabel}</span>`
-    : `<span class="board-cell-label__value">${cellLabel}</span>`}
+          <span class="board-cell-label__value">${cell.index}</span>${isLandmark ? '<span class="board-cell-label__dot" aria-hidden="true"></span>' : ''}
         </span>
       `;
     })
@@ -496,8 +524,9 @@ export function renderBoardRenderer(root, { state = {}, size = DEFAULT_SIZE } = 
   }
 
   const canvas = getOrCreateCanvas(root);
-  canvas.width = size.width;
-  canvas.height = size.height;
+  const dpr = Math.min(globalThis.devicePixelRatio || 1, 3);
+  canvas.width = size.width * dpr;
+  canvas.height = size.height * dpr;
   canvas.style.width = '100%';
   canvas.style.height = '100%';
   canvas.style.display = 'block';
@@ -511,6 +540,7 @@ export function renderBoardRenderer(root, { state = {}, size = DEFAULT_SIZE } = 
     return canvas;
   }
 
+  ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, size.width, size.height);
   drawBoardWater(ctx, size.width, size.height);
   drawRouteGuideline(ctx, size.width, size.height);

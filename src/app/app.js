@@ -490,6 +490,27 @@ function renderGameScene(root, payload = {}) {
       }, { once: true });
     });
 
+    boardStage.querySelectorAll('[data-cell-kind="landmark"][data-event-id]').forEach((cell) => {
+      const eventId = cell.dataset.eventId;
+      if (!eventId) {
+        return;
+      }
+
+      cell.addEventListener('click', () => {
+        const eventCard = getBoardEventById(eventId);
+        const detail = buildStickerDetail(eventCard);
+        if (!detail) {
+          return;
+        }
+
+        const layout = getInfoOverlayLayout();
+        openInfoOverlay(detail, {
+          layout,
+          anchor: layout === 'anchored' ? buildStickerAnchor(cell) : null,
+        });
+      }, { once: true });
+    });
+
     const rollButton = hudStage.querySelector('[data-role="roll-action"]');
     const isMotionPhase = Boolean(sceneState.animation?.phase && sceneState.animation.phase !== 'idle');
     const currentPlayerIsAI = Boolean(sceneState.currentPlayer?.isAI);

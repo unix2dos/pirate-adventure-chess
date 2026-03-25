@@ -64,8 +64,8 @@ describe('game scene interactions', () => {
     root.querySelector('[data-role="start-adventure"]').click();
 
     expect(root.querySelector('[data-board-sticker]')).toBeNull();
-    expect(root.querySelector('[data-cell-label="27"]')?.textContent).toContain('幸运骰');
-    expect(root.querySelector('[data-cell-label="27"]')?.textContent).not.toContain('27');
+    expect(root.querySelector('[data-cell-label="27"]')?.textContent).toContain('27');
+    expect(root.querySelector('[data-cell-label="27"]')?.dataset.eventId).toBeTruthy();
   });
 
   it('toggles BGM and SFX controls from settings drawer independently', async () => {

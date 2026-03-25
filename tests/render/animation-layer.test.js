@@ -31,6 +31,7 @@ describe('animation layer', () => {
       createRadialGradient() {
         return { addColorStop() {} };
       },
+      scale() {},
       save() {},
       restore() {},
       setLineDash() {},
@@ -78,6 +79,7 @@ describe('animation layer', () => {
       createRadialGradient() {
         return { addColorStop() {} };
       },
+      scale() {},
       save() {},
       restore() {},
       setLineDash() {},

@@ -199,8 +199,9 @@ export function renderAnimationLayer(root, { state = {}, size = DEFAULT_SIZE } =
   }
 
   const canvas = getOrCreateCanvas(root);
-  canvas.width = size.width;
-  canvas.height = size.height;
+  const dpr = Math.min(globalThis.devicePixelRatio || 1, 3);
+  canvas.width = size.width * dpr;
+  canvas.height = size.height * dpr;
   canvas.style.position = 'absolute';
   canvas.style.inset = '0';
   canvas.style.width = '100%';
@@ -217,6 +218,7 @@ export function renderAnimationLayer(root, { state = {}, size = DEFAULT_SIZE } =
     return canvas;
   }
 
+  ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, size.width, size.height);
   drawVignette(ctx, size.width, size.height);
   drawTrailGlow(ctx, size.width, size.height, state.animation?.trail ?? []);

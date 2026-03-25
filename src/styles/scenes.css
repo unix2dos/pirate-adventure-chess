@@ -132,8 +132,9 @@
     linear-gradient(180deg, rgba(85, 170, 224, 0.14), rgba(9, 47, 84, 0.08));
   border: 1px solid rgba(255, 255, 255, 0.32);
   box-shadow:
-    0 24px 64px rgba(22, 71, 119, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.52);
+    0 28px 72px rgba(22, 71, 119, 0.22),
+    0 8px 20px rgba(22, 71, 119, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.56);
 }
 
 .board-stage-shell::before {
@@ -153,6 +154,8 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.34),
     inset 0 -36px 64px rgba(4, 34, 63, 0.12);

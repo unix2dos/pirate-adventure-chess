@@ -72,10 +72,10 @@ describe('board renderer', () => {
     expect(root.querySelector('[data-board-sticker-layer]')?.textContent ?? '').toBe('');
     expect(root.querySelector('[data-cell-label="27"]')?.dataset.landmarkStyle).toBe('dice');
     expect(root.querySelector('[data-cell-label="27"]')?.dataset.cellKind).toBe('landmark');
-    expect(root.querySelector('[data-cell-label="27"]')?.textContent).toContain('幸运骰');
-    expect(root.querySelector('[data-cell-label="27"]')?.textContent).not.toContain('27');
+    expect(root.querySelector('[data-cell-label="27"]')?.textContent).toContain('27');
+    expect(root.querySelector('[data-cell-label="27"]')?.dataset.eventId).toBeTruthy();
     expect(root.querySelector('[data-cell-label="46"]')?.dataset.landmarkStyle).toBe('octopus');
-    expect(root.querySelector('[data-cell-label="46"]')?.textContent).toContain('章鱼海怪');
+    expect(root.querySelector('[data-cell-label="46"]')?.textContent).toContain('46');
     expect(root.querySelector('[data-cell-label="60"]')?.dataset.landmarkStyle).toBe('bridge');
     expect(root.querySelector('[data-cell-label="27"]')?.className).toContain('board-cell-label--landmark-dice');
     expect(root.querySelector('[data-cell-label="46"]')?.className).toContain('board-cell-label--landmark-octopus');

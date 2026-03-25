@@ -113,19 +113,36 @@
 }
 
 .game-scene[data-layout="mobile-portrait"] {
-  --scene-padding: 0.55rem;
+  --scene-padding: 0;
+  --hud-dock-height: 72px;
+}
+
+.game-scene[data-layout="mobile-portrait"] .game-layout {
+  min-height: var(--viewport-height, var(--app-height));
+  display: block;
 }
 
 .game-scene[data-layout="mobile-portrait"] .game-stage {
+  position: relative;
   width: 100%;
-  justify-items: center;
+  height: var(--viewport-height, var(--app-height));
+  display: block;
+  overflow: hidden;
 }
 
 .game-scene[data-layout="mobile-portrait"] .board-stage-shell {
-  width: min(
-    100%,
-    calc((var(--viewport-height, var(--app-height)) - var(--scene-block-gutter) - var(--hud-dock-height)) * 1.6)
-  );
+  --avail-h: calc(var(--viewport-height, var(--app-height)) - var(--hud-dock-height));
+  --board-w: min(var(--avail-h), calc(var(--viewport-width, 100vw) * 1.6));
+  position: absolute;
+  left: 50%;
+  top: calc(var(--avail-h) / 2);
+  width: var(--board-w);
+  height: unset;
+  max-width: unset;
+  max-height: unset;
+  aspect-ratio: 16 / 10;
+  transform: translate(-50%, -50%) rotate(90deg);
+  border-radius: 16px;
 }
 
 .game-scene[data-layout="mobile-portrait"] .hud-stage-shell {
