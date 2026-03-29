@@ -1,4 +1,4 @@
-import { getCellMeta } from '../core/board-data.js';
+import { getDisplayCell } from './board-renderer.js';
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
 
@@ -36,7 +36,7 @@ function drawVignette(ctx, width, height) {
 }
 
 function drawPulse(ctx, width, height, position) {
-  const cell = getCellMeta(position);
+  const cell = getDisplayCell(position);
   if (!cell) {
     return;
   }
@@ -51,7 +51,7 @@ function drawPulse(ctx, width, height, position) {
 
 function drawTrailGlow(ctx, width, height, trail = []) {
   const validTrail = trail
-    .map((position) => getCellMeta(position))
+    .map((position) => getDisplayCell(position))
     .filter(Boolean);
 
   if (validTrail.length === 0) {
@@ -89,7 +89,7 @@ function drawTrailGlow(ctx, width, height, trail = []) {
 }
 
 function drawLandingBurst(ctx, width, height, position, phase) {
-  const cell = getCellMeta(position);
+  const cell = getDisplayCell(position);
   if (!cell || !phase) {
     return;
   }
@@ -121,7 +121,7 @@ function drawTrailParticles(ctx, width, height, trail = [], phase = 'idle') {
 
   ctx.save();
   trail
-    .map((position) => getCellMeta(position))
+    .map((position) => getDisplayCell(position))
     .filter(Boolean)
     .forEach((cell, index) => {
       const point = toCanvasPoint(cell, width, height);
@@ -143,7 +143,7 @@ function drawTrailParticles(ctx, width, height, trail = [], phase = 'idle') {
 }
 
 function drawLandingRays(ctx, width, height, position, phase) {
-  const cell = getCellMeta(position);
+  const cell = getDisplayCell(position);
   if (!cell || (phase !== 'landing' && phase !== 'result')) {
     return;
   }
@@ -175,7 +175,7 @@ function drawRollingAura(ctx, width, height, animation = {}) {
     return;
   }
 
-  const cell = getCellMeta(animation?.activeCell);
+  const cell = getDisplayCell(animation?.activeCell);
   if (!cell) {
     return;
   }

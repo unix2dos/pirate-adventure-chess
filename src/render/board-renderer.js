@@ -33,6 +33,14 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function projectPathPoint(cell) {
   const dx = cell.x - INNER_RING_CENTER.x;
   const dy = cell.y - INNER_RING_CENTER.y;
@@ -110,6 +118,11 @@ const DISPLAY_PATH = boardPath.map((cell) => {
   return { ...cell, ...projected };
 });
 const DISPLAY_PATH_BY_INDEX = new Map(DISPLAY_PATH.map((cell) => [cell.index, cell]));
+
+// Exported so the animation layer can use the same projected coordinates as the DOM tiles
+export function getDisplayCell(index) {
+  return DISPLAY_PATH_BY_INDEX.get(index) ?? null;
+}
 
 function drawBoardWater(ctx, width, height) {
   // Rich ocean gradient
@@ -439,7 +452,65 @@ function renderBoardStickers(root) {
     zIndex: '3',
   });
 
-  stickerLayer.innerHTML = '';
+  if (stickerLayer.dataset.rendered === 'true') {
+    return;
+  }
+
+  // Aspect ratio for correct link line geometry (16:10 board)
+  const ASPECT_Y = 900 / 1440;
+
+  const items = boardStickers.map((sticker) => {
+    const projCell = DISPLAY_PATH_BY_INDEX.get(sticker.cell);
+    if (!projCell) {
+      return '';
+    }
+
+    // Apply sticker offset onto the projected cell position
+    const offsetX = sticker.x - sticker.cellX;
+    const offsetY = sticker.y - sticker.cellY;
+    const stickerX = clamp(projCell.x + offsetX, 0.05, 0.96);
+    const stickerY = clamp(projCell.y + offsetY, 0.06, 0.94);
+
+    // Link line from sticker toward cell
+    const dx = projCell.x - stickerX;
+    const dy = projCell.y - stickerY;
+    const linkWidthPct = Math.hypot(dx, dy * ASPECT_Y) * 100;
+    const linkAngle = Math.atan2(dy * ASPECT_Y, dx) * (180 / Math.PI);
+
+    // Pin direction: sticker above cell → pin extends downward
+    const lift = stickerY < projCell.y ? 'up' : 'down';
+
+    const icon = STICKER_ICONS[sticker.style] ?? '📌';
+    const safeId = escapeHtml(sticker.id);
+    const safeEventId = escapeHtml(sticker.eventId);
+    const safeStyle = escapeHtml(sticker.style);
+    const safeText = escapeHtml(sticker.text);
+    const safeDetail = escapeHtml(sticker.detail);
+    const safeTitle = escapeHtml(`${sticker.text}: ${sticker.detail}`);
+
+    return [
+      `<div class="board-sticker-link"`,
+      `     style="left:${(stickerX * 100).toFixed(2)}%;top:${(stickerY * 100).toFixed(2)}%;width:${linkWidthPct.toFixed(2)}%;--link-angle:${linkAngle.toFixed(2)}deg;"`,
+      `     aria-hidden="true"></div>`,
+      `<button class="board-sticker board-sticker--${safeStyle}"`,
+      `        data-board-sticker="${safeId}"`,
+      `        data-event-id="${safeEventId}"`,
+      `        data-lift="${lift}"`,
+      `        style="left:${(stickerX * 100).toFixed(2)}%;top:${(stickerY * 100).toFixed(2)}%;--sticker-rotation:${sticker.rotation}deg;"`,
+      `        type="button"`,
+      `        title="${safeTitle}">`,
+      `  <span class="board-sticker__icon" aria-hidden="true">${icon}</span>`,
+      `  <span class="board-sticker__title">${safeText}</span>`,
+      `  <span class="board-sticker__detail">${safeDetail}</span>`,
+      `</button>`,
+    ].join('\n');
+  });
+
+  // Use DOM methods to set content safely
+  const fragment = document.createRange().createContextualFragment(items.join('\n'));
+  stickerLayer.replaceChildren(fragment);
+
+  stickerLayer.dataset.rendered = 'true';
 }
 
 function renderCenterSign(root) {

@@ -298,29 +298,36 @@
 
 .hud-float__dock {
   position: absolute;
-  right: clamp(0.7rem, 1.6vw, 1.05rem);
+  left: 50%;
+  transform: translateX(-50%);
   bottom: clamp(0.7rem, 1.6vw, 1.05rem);
-  display: grid;
-  justify-items: end;
-  gap: 0.45rem;
-  pointer-events: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.42rem 0.75rem 0.42rem 0.65rem;
+  border-radius: 1.6rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 244, 226, 0.94)),
+    linear-gradient(135deg, rgba(255, 231, 173, 0.18), rgba(111, 219, 255, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 16px 36px rgba(18, 53, 97, 0.2),
+    0 4px 12px rgba(18, 53, 97, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+  white-space: nowrap;
 }
 
 .hud-turn-status-bar {
-  min-width: min(18rem, calc(100vw - 8rem));
-  max-width: min(24rem, calc(100vw - 6.6rem));
   display: flex;
   align-items: center;
   gap: 0.62rem;
-  padding: 0.42rem 0.62rem;
-  border-radius: 1rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 241, 210, 0.9)),
-    linear-gradient(135deg, rgba(255, 139, 103, 0.12), rgba(88, 205, 255, 0.16));
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 14px 24px rgba(23, 47, 80, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
   pointer-events: none;
 }
 
@@ -773,25 +780,11 @@
   position: absolute;
   left: 0.75rem;
   right: 0.75rem;
+  transform: none;
   bottom: calc(var(--safe-bottom, 0px) + 0.6rem);
   top: auto;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.52rem 0.75rem 0.52rem 0.65rem;
   border-radius: 1.4rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 244, 226, 0.94)),
-    linear-gradient(135deg, rgba(255, 231, 173, 0.18), rgba(111, 219, 255, 0.1));
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  box-shadow:
-    0 16px 36px rgba(18, 53, 97, 0.2),
-    0 4px 12px rgba(18, 53, 97, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  pointer-events: auto;
 }
 
 .hud-float[data-layout='mobile-portrait'] .hud-turn-status-bar {
@@ -850,10 +843,10 @@
   }
 
   .board-cell-label__dot {
-    width: 7px;
-    height: 7px;
-    top: -3px;
-    right: -3px;
+    width: 9px;
+    height: 9px;
+    top: -4px;
+    right: -4px;
   }
 
   .board-player-chip {
@@ -885,14 +878,14 @@
   }
 
   .board-sticker__icon {
-    width: 1.46rem;
-    height: 1.46rem;
-    font-size: 0.88rem;
+    width: 1.05rem;
+    height: 1.05rem;
+    font-size: 0.6rem;
   }
 
   .board-sticker__title {
-    padding: 0.16rem 0.42rem;
-    font-size: 0.58rem;
+    padding: 0.08rem 0.28rem;
+    font-size: 0.46rem;
   }
 
   .board-center-sign {
@@ -1125,10 +1118,10 @@
 }
 
 .board-cell-label--landmark {
-  min-width: 2.5rem;
-  height: 1.9rem;
-  padding: 0 0.48rem;
-  border-radius: 0.82rem;
+  min-width: 2.8rem;
+  height: 2.1rem;
+  padding: 0 0.52rem;
+  border-radius: 0.9rem;
   border-width: 2px;
   cursor: pointer;
   background: linear-gradient(180deg, #ffe783 0%, #ffbc57 100%);
@@ -1136,7 +1129,8 @@
     inset 0 2px 0 rgba(255, 255, 255, 0.72),
     inset 0 -2px 0 rgba(173, 96, 30, 0.26),
     0 12px 20px rgba(128, 80, 34, 0.24),
-    0 0 0 2.5px rgba(255, 255, 255, 0.32);
+    0 0 0 2.5px rgba(255, 255, 255, 0.32),
+    0 0 10px 2px rgba(255, 188, 87, 0.38);
 }
 
 .board-cell-label--landmark:hover {
@@ -1146,14 +1140,20 @@
 
 .board-cell-label__dot {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 9px;
-  height: 9px;
+  top: -5px;
+  right: -5px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   background: var(--dot-color, #e8901a);
   border: 2px solid white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.26), 0 0 0 0 var(--dot-color, #e8901a);
+  animation: dot-pulse 2.4s ease-out infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 70% { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.26), 0 0 0 0 var(--dot-color, #e8901a); }
+  40% { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.26), 0 0 0 5px color-mix(in oklab, var(--dot-color, #e8901a) 0%, transparent); }
 }
 
 .board-cell-label--landmark-star .board-cell-label__dot,
@@ -1210,6 +1210,12 @@
     linear-gradient(180deg, #fff06f 0%, #ffad2b 100%);
   border-color: rgba(146, 84, 11, 0.7);
   color: #5c3600;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -2px 0 rgba(146, 84, 11, 0.2),
+    0 10px 18px rgba(146, 84, 11, 0.2),
+    0 0 0 2.5px rgba(255, 255, 255, 0.32),
+    0 0 10px 2px rgba(255, 173, 43, 0.42);
 }
 
 .board-cell-label--landmark-gem {
@@ -1218,6 +1224,12 @@
     linear-gradient(180deg, #ffd1e8 0%, #ff70b4 100%);
   border-color: rgba(149, 42, 92, 0.7);
   color: #6b1048;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -2px 0 rgba(149, 42, 92, 0.2),
+    0 10px 18px rgba(149, 42, 92, 0.2),
+    0 0 0 2.5px rgba(255, 255, 255, 0.32),
+    0 0 10px 2px rgba(255, 112, 180, 0.38);
 }
 
 .board-cell-label--landmark-octopus,
@@ -1227,6 +1239,12 @@
     linear-gradient(180deg, #cfe3ff 0%, #7ca6ff 100%);
   border-color: rgba(52, 85, 155, 0.7);
   color: #1e3a7a;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -2px 0 rgba(52, 85, 155, 0.2),
+    0 10px 18px rgba(52, 85, 155, 0.2),
+    0 0 0 2.5px rgba(255, 255, 255, 0.32),
+    0 0 10px 2px rgba(124, 166, 255, 0.42);
 }
 
 .board-cell-label--landmark-bridge,
@@ -1236,6 +1254,12 @@
     linear-gradient(180deg, #e4ffc0 0%, #97e04e 100%);
   border-color: rgba(68, 121, 26, 0.7);
   color: #2a5410;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -2px 0 rgba(68, 121, 26, 0.2),
+    0 10px 18px rgba(68, 121, 26, 0.2),
+    0 0 0 2.5px rgba(255, 255, 255, 0.32),
+    0 0 10px 2px rgba(151, 224, 78, 0.42);
 }
 
 .board-cell-label--landmark-pirate,
@@ -1245,6 +1269,12 @@
     linear-gradient(180deg, #ffc9b1 0%, #ff7540 100%);
   border-color: rgba(146, 56, 20, 0.75);
   color: #5c1c06;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -2px 0 rgba(146, 56, 20, 0.2),
+    0 10px 18px rgba(146, 56, 20, 0.2),
+    0 0 0 2.5px rgba(255, 255, 255, 0.32),
+    0 0 10px 2px rgba(255, 117, 64, 0.42);
 }
 
 .board-cell-label--current {
@@ -1349,75 +1379,34 @@
 
 .board-sticker {
   position: absolute;
-  display: grid;
-  justify-items: center;
-  gap: 0.2rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.18rem;
   padding: 0;
   border: none;
   background: transparent;
-  transform: translate(-50%, -50%) rotate(var(--sticker-rotation, 0deg));
+  transform: translate(-50%, -50%);
   color: #453018;
-  font-size: 0.68rem;
+  font-size: 0.54rem;
   line-height: 1;
-  text-align: center;
-  filter: drop-shadow(0 10px 14px rgba(88, 63, 31, 0.18));
+  text-align: left;
+  filter: drop-shadow(0 4px 6px rgba(88, 63, 31, 0.14));
   cursor: pointer;
 }
 
 .board-sticker-link {
-  position: absolute;
-  height: 2px;
-  transform-origin: 0 50%;
-  transform: rotate(var(--link-angle, 0deg));
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(75, 109, 149, 0.58), rgba(75, 109, 149, 0.08));
-  pointer-events: none;
+  display: none;
 }
 
-.board-sticker::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  width: 2px;
-  height: 1rem;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(88, 63, 31, 0.52), rgba(88, 63, 31, 0));
-  z-index: 0;
-}
-
+.board-sticker::before,
 .board-sticker::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  width: 0.44rem;
-  height: 0.44rem;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--sticker-accent, #ffd76f) 68%, white);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
-  z-index: 0;
-}
-
-.board-sticker[data-lift='up']::before {
-  top: calc(100% - 0.12rem);
-}
-
-.board-sticker[data-lift='up']::after {
-  top: calc(100% + 0.7rem);
-}
-
-.board-sticker[data-lift='down']::before {
-  bottom: calc(100% - 0.12rem);
-}
-
-.board-sticker[data-lift='down']::after {
-  bottom: calc(100% + 0.7rem);
+  display: none;
 }
 
 .board-sticker__icon {
-  width: 1.78rem;
-  height: 1.78rem;
+  width: 1.28rem;
+  height: 1.28rem;
   display: grid;
   place-items: center;
   border-radius: 999px;
@@ -1426,24 +1415,25 @@
     color-mix(in oklab, var(--sticker-accent, #ffd76f) 44%, white),
     color-mix(in oklab, var(--sticker-accent, #ffd76f) 76%, #fff3dc)
   );
-  border: 1.6px solid rgba(88, 63, 31, 0.54);
+  border: 1.4px solid rgba(88, 63, 31, 0.38);
   box-shadow:
-    0 8px 14px rgba(88, 63, 31, 0.16),
+    0 3px 6px rgba(88, 63, 31, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.78);
-  font-size: 0.98rem;
+  font-size: 0.72rem;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .board-sticker__title {
-  padding: 0.2rem 0.52rem;
+  padding: 0.12rem 0.36rem;
   border-radius: 999px;
-  background: rgba(255, 250, 239, 0.98);
-  border: 1.4px solid color-mix(in oklab, var(--sticker-accent, #ffd76f) 28%, #6b4f28);
+  background: rgba(255, 250, 239, 0.94);
+  border: 1px solid color-mix(in oklab, var(--sticker-accent, #ffd76f) 24%, #8b6a3a);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 6px 10px rgba(88, 63, 31, 0.14);
+    0 3px 6px rgba(88, 63, 31, 0.1);
   font-weight: 800;
-  font-size: 0.66rem;
+  font-size: 0.54rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
   z-index: 2;
@@ -1451,6 +1441,21 @@
 
 .board-sticker__detail {
   display: none;
+}
+
+.board-sticker:hover .board-sticker__detail,
+.board-sticker:focus-visible .board-sticker__detail {
+  display: block;
+  padding: 0.14rem 0.44rem;
+  border-radius: 999px;
+  background: rgba(255, 250, 239, 0.96);
+  border: 1.2px solid color-mix(in oklab, var(--sticker-accent, #ffd76f) 22%, #8b6a3a);
+  font-weight: 700;
+  font-size: 0.56rem;
+  color: #6b4f28;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  z-index: 2;
 }
 
 .board-sticker--star {
