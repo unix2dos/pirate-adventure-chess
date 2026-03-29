@@ -134,10 +134,7 @@
   animation: floatBob 4.8s ease-in-out infinite;
 }
 
-.action-button--primary,
-.count-option[data-active='true'] {
-  animation: softPulse 3.2s ease-in-out infinite;
-}
+/* softPulse 仅保留在掷骰 FAB 上，避免全局视觉噪音 */
 
 .dice-fab[data-motion='rolling'] {
   animation:

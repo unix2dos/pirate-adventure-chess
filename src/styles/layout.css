@@ -49,14 +49,13 @@
 .scene-panel {
   border-radius: 32px;
   padding: clamp(1.25rem, 2vw, 2rem);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 246, 229, 0.9)),
-    linear-gradient(135deg, rgba(255, 212, 135, 0.14), rgba(110, 221, 255, 0.1));
+  /* 高不透明度纯白面板，与深色海洋背景形成强对比，清晰分层 */
+  background: oklch(0.99 0.008 90);
   box-shadow:
-    0 28px 70px rgba(30, 66, 107, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  backdrop-filter: blur(12px);
+    0 32px 80px oklch(0.28 0.10 230 / 0.22),
+    0 8px 24px oklch(0.28 0.10 230 / 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 0.9);
 }
 
 .stack {

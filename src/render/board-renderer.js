@@ -366,15 +366,46 @@ function drawCenterIsland(ctx, width, height) {
     ctx.fill();
   }
 
-  ctx.fillStyle = '#5a3518';
-  ctx.fillRect(centerX - 58, chestOuterTop, 116, 72);
-  ctx.fillStyle = '#8d5c2e';
-  ctx.fillRect(centerX - 52, chestInnerTop, 104, 60);
-  ctx.strokeStyle = '#2d1a0f';
-  ctx.lineWidth = 4;
+  // 宝箱底座光晕：先画一个温暖的发光地基
+  ctx.save();
+  const chestGlow = ctx.createRadialGradient(centerX + 4, centerY + 20, 10, centerX + 4, centerY + 20, 110);
+  chestGlow.addColorStop(0, 'rgba(255, 220, 60, 0.62)');
+  chestGlow.addColorStop(0.5, 'rgba(255, 190, 30, 0.22)');
+  chestGlow.addColorStop(1, 'rgba(255, 190, 30, 0)');
+  ctx.fillStyle = chestGlow;
+  ctx.beginPath();
+  ctx.ellipse(centerX + 4, centerY + 24, 110, 44, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 宝箱主体——更饱和的棕色
+  ctx.save();
+  const chestBodyGrad = ctx.createLinearGradient(centerX - 58, chestOuterTop, centerX - 58, chestOuterTop + 72);
+  chestBodyGrad.addColorStop(0, '#9b6030');
+  chestBodyGrad.addColorStop(1, '#5a3010');
+  ctx.fillStyle = chestBodyGrad;
+  ctx.beginPath();
+  ctx.roundRect(centerX - 58, chestOuterTop, 116, 72, 8);
+  ctx.fill();
+
+  // 宝箱内壁（稍浅）
+  const chestInnerGrad = ctx.createLinearGradient(centerX - 52, chestInnerTop, centerX - 52, chestInnerTop + 60);
+  chestInnerGrad.addColorStop(0, '#c4854a');
+  chestInnerGrad.addColorStop(1, '#7a4520');
+  ctx.fillStyle = chestInnerGrad;
+  ctx.beginPath();
+  ctx.roundRect(centerX - 52, chestInnerTop, 104, 60, 6);
+  ctx.fill();
+  ctx.strokeStyle = '#3a1a08';
+  ctx.lineWidth = 3;
   ctx.strokeRect(centerX - 52, chestInnerTop, 104, 60);
 
-  ctx.fillStyle = '#392012';
+  // 宝箱盖子——金属感梯形
+  const lidGrad = ctx.createLinearGradient(centerX - 60, centerY - 78, centerX - 60, centerY - 10);
+  lidGrad.addColorStop(0, '#c8803a');
+  lidGrad.addColorStop(0.5, '#8d4e20');
+  lidGrad.addColorStop(1, '#5a3010');
+  ctx.fillStyle = lidGrad;
   ctx.beginPath();
   ctx.moveTo(centerX - 60, centerY - 32);
   ctx.lineTo(centerX + 4, centerY - 78);
@@ -382,13 +413,43 @@ function drawCenterIsland(ctx, width, height) {
   ctx.lineTo(centerX, centerY - 10);
   ctx.closePath();
   ctx.fill();
+  ctx.strokeStyle = '#3a1a08';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
 
-  ctx.fillStyle = '#f4d04b';
-  ctx.fillRect(centerX - 9, centerY - 10, 18, 18);
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+  // 金属扣锁——更大、更亮
+  const claspGrad = ctx.createRadialGradient(centerX, centerY - 2, 2, centerX, centerY - 2, 14);
+  claspGrad.addColorStop(0, '#fff8b0');
+  claspGrad.addColorStop(0.5, '#f7d040');
+  claspGrad.addColorStop(1, '#c8900a');
+  ctx.fillStyle = claspGrad;
   ctx.beginPath();
-  ctx.arc(centerX - 20, centerY - 24, 18, 0, Math.PI * 2);
+  ctx.roundRect(centerX - 12, centerY - 14, 24, 24, 4);
+  ctx.fill();
+  ctx.strokeStyle = '#7a5a08';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(centerX - 12, centerY - 14, 24, 24);
+
+  // 金币从箱口溢出效果
+  const coinColors = ['#ffd740', '#ffbf20', '#ffe880', '#f7c820'];
+  for (let ci = 0; ci < 8; ci += 1) {
+    const angle = (Math.PI * ci) / 5 - 0.3;
+    const dist = 24 + (ci % 3) * 14;
+    const cx2 = centerX + Math.cos(angle) * dist;
+    const cy2 = chestInnerTop - 8 + Math.sin(angle) * 12;
+    ctx.fillStyle = coinColors[ci % coinColors.length];
+    ctx.beginPath();
+    ctx.ellipse(cx2, cy2, 10, 7, angle * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(100, 60, 0, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // 宝箱顶部高光
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.beginPath();
+  ctx.ellipse(centerX - 8, centerY - 54, 28, 10, -0.3, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
