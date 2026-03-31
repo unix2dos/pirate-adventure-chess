@@ -1,3 +1,9 @@
+/* ============================================================
+   场景样式 — 彩浪海盗寻宝赛
+   ============================================================ */
+
+/* ── 开始屏 ──────────────────────────────── */
+
 .start-scene {
   display: grid;
   align-items: center;
@@ -6,119 +12,283 @@
 .start-hero,
 .win-hero {
   align-self: stretch;
-  gap: 1.2rem;
+  gap: 1.1rem;
 }
 
+/* 贴纸行 */
 .sticker-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.62rem;
 }
 
 .sticker {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.65rem 0.95rem;
+  padding: 0.55rem 0.95rem;
   border-radius: 999px;
-  background: color-mix(in oklab, white 70%, var(--mint));
   font-weight: 700;
+  font-size: 0.9rem;
   color: var(--ink-strong);
+  /* 手绘标签：浅色底+深色描边 */
+  background: oklch(0.92 0.10 162 / 0.8);
+  border: 1.5px solid oklch(0.60 0.12 162 / 0.5);
+  box-shadow: 0 3px 0 oklch(0.60 0.12 162 / 0.25);
 }
 
-.sticker:nth-child(2n) {
-  background: color-mix(in oklab, white 68%, var(--coral));
+.sticker--surprise {
+  background: oklch(0.92 0.12 32 / 0.75);
+  border-color: oklch(0.60 0.14 32 / 0.45);
+  box-shadow: 0 3px 0 oklch(0.60 0.14 32 / 0.22);
 }
 
-.map-showcase {
+.sticker--trophy {
+  background: oklch(0.93 0.14 88 / 0.80);
+  border-color: oklch(0.62 0.14 88 / 0.45);
+  box-shadow: 0 3px 0 oklch(0.62 0.14 88 / 0.22);
+}
+
+/* ── 动态海洋英雄场景 ──────────────────────── */
+
+.hero-scene {
   position: relative;
-  min-height: 320px;
-  padding: 1.3rem;
-  border-radius: 36px;
+  min-height: 300px;
+  border-radius: var(--sketch-radius-lg);
   overflow: hidden;
+  /* 深邃海洋渐变背景 */
   background:
-    radial-gradient(circle at top left, color-mix(in oklab, white 32%, var(--lemon)) 0, transparent 28%),
-    radial-gradient(circle at 88% 18%, rgba(255, 224, 125, 0.36) 0, transparent 16%),
-    linear-gradient(180deg, color-mix(in oklab, white 20%, var(--sea-bright)) 0%, color-mix(in oklab, white 8%, var(--sea-deep)) 100%);
+    linear-gradient(
+      180deg,
+      oklch(0.72 0.14 222) 0%,
+      oklch(0.58 0.17 228) 45%,
+      oklch(0.44 0.16 234) 100%
+    );
   box-shadow:
-    0 28px 68px rgba(20, 68, 110, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+    0 32px 72px oklch(0.28 0.14 232 / 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.18);
 }
 
-.map-showcase__sun,
-.map-showcase__island,
-.map-showcase__token {
+/* 天空层 */
+.hero-sky {
   position: absolute;
+  inset: 0;
+  overflow: hidden;
 }
 
-.map-showcase__sun {
-  top: 1rem;
+/* 太阳/月亮 */
+.hero-sun {
+  position: absolute;
+  top: 0.8rem;
   right: 1.4rem;
-  width: 6rem;
-  aspect-ratio: 1;
+  width: 5.5rem;
+  height: 5.5rem;
   border-radius: 999px;
-  background: radial-gradient(circle, color-mix(in oklab, white 28%, var(--lemon)) 0%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    oklch(0.98 0.16 88) 0%,
+    oklch(0.92 0.18 78) 38%,
+    oklch(0.88 0.16 74 / 0.6) 62%,
+    transparent 80%
+  );
+  box-shadow:
+    0 0 24px oklch(0.92 0.18 82 / 0.6),
+    0 0 60px oklch(0.88 0.16 80 / 0.25);
 }
 
-.map-showcase__island {
-  width: 8rem;
-  height: 4.8rem;
-  border-radius: 55% 45% 48% 52%;
-  background: linear-gradient(180deg, color-mix(in oklab, white 30%, var(--mint)), color-mix(in oklab, white 14%, var(--sea-deep)));
-  box-shadow: inset 0 -8px 0 color-mix(in oklab, var(--sea-deep) 18%, transparent);
-}
-
-.map-showcase__island--one {
-  left: 1.4rem;
-  bottom: 2rem;
-}
-
-.map-showcase__island--two {
-  right: 2rem;
-  bottom: 4.2rem;
-}
-
-.map-showcase__path {
+/* 星星 */
+.hero-star {
   position: absolute;
-  inset: 14% 10% 18%;
+  left: var(--x, 50%);
+  top:  var(--y, 10%);
+  width:  var(--sz, 5px);
+  height: var(--sz, 5px);
+  border-radius: 999px;
+  background: oklch(0.98 0.04 80);
+  box-shadow: 0 0 6px oklch(0.98 0.12 80 / 0.8);
 }
 
-.map-showcase__path svg {
+/* 海浪系统：三层波浪 */
+.hero-ocean {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 55%;
+  pointer-events: none;
+}
+
+.hero-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  /* 200% 宽以实现无缝滚动 */
+  width: 200%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-position: 0 bottom;
+  background-size: 50% 100%;
+}
+
+.hero-wave--back {
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath d='M0 60 C240 20 480 100 720 60 C960 20 1200 100 1440 60 L1440 120 L0 120 Z' fill='%23185a8a'/%3E%3C/svg%3E");
+}
+
+.hero-wave--mid {
+  opacity: 0.55;
+  bottom: -4px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath d='M0 70 C180 30 360 110 720 70 C1080 30 1260 110 1440 70 L1440 120 L0 120 Z' fill='%231a6b9e'/%3E%3C/svg%3E");
+}
+
+.hero-wave--front {
+  opacity: 0.8;
+  bottom: -8px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath d='M0 80 C120 50 360 110 720 80 C1080 50 1320 110 1440 80 L1440 120 L0 120 Z' fill='%23206fa8'/%3E%3C/svg%3E");
+}
+
+/* 船只容器 */
+.hero-ship-wrap {
+  position: absolute;
+  left: 10%;
+  bottom: 26%;
+  width: 52%;
+  transform-origin: center 90%;
+}
+
+.hero-ship {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 12px 24px rgba(10, 40, 80, 0.4));
+}
+
+/* 宝岛 */
+.hero-island {
+  position: absolute;
+  right: 5%;
+  bottom: 22%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.hero-island__glow {
+  position: absolute;
+  inset: -20px -30px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, oklch(0.88 0.18 82 / 0.5) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-island__palm {
+  font-size: 2.6rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+.hero-island__chest {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(200, 140, 20, 0.6));
+  animation: floatBob 3.5s ease-in-out infinite;
+}
+
+.hero-island__label {
+  margin-top: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 230, 100, 0.88);
+  color: #3a2008;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  border: 1.5px solid rgba(180, 120, 20, 0.6);
+  white-space: nowrap;
+}
+
+/* 罗盘 */
+.hero-compass-wrap {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  font-size: 2rem;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  opacity: 0.8;
+}
+
+/* 航路 SVG */
+.hero-route {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  pointer-events: none;
 }
 
-.map-showcase__token {
-  display: inline-flex;
+/* 模式选择按钮升级 */
+.mode-btn {
+  display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.6rem 0.9rem;
-  border-radius: 999px;
-  background: color-mix(in oklab, white 70%, var(--bg-sand));
+  gap: 0.6rem;
+  padding: 0.85rem 1.1rem;
+  text-align: left;
+}
+
+.mode-btn__icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.mode-btn__label {
   font-weight: 800;
-  color: var(--ink-strong);
-  box-shadow: var(--shadow-md);
+  font-size: 0.92rem;
 }
 
-.map-showcase__token--a {
-  left: 10%;
-  top: 18%;
+/* 开始按钮升级 */
+.start-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-size: 1.08rem;
+  padding: 1.05rem 1.6rem;
+  /* 更饱和的行动主色 */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%),
+    linear-gradient(135deg, var(--coral), var(--coral-dark));
+  box-shadow:
+    0 18px 36px oklch(0.52 0.22 32 / 0.32),
+    0 6px 12px  oklch(0.52 0.22 32 / 0.18),
+    inset 0 2px 0 rgba(255,255,255,0.28),
+    inset 0 -3px 0 rgba(0,0,0,0.14);
+  border-radius: var(--sketch-radius-md);
 }
 
-.map-showcase__token--b {
-  left: 42%;
-  top: 42%;
+.start-cta:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 24px 48px oklch(0.52 0.22 32 / 0.40),
+    0 8px 16px  oklch(0.52 0.22 32 / 0.22),
+    inset 0 2px 0 rgba(255,255,255,0.32);
 }
 
-.map-showcase__token--c {
-  right: 8%;
-  bottom: 16%;
+.start-cta:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
 }
 
-.start-panel,
-.win-panel {
-  background: color-mix(in oklab, white 78%, var(--panel));
+.start-cta__icon {
+  font-size: 1.4rem;
 }
+
+/* 开始面板 */
+.start-panel {
+  background: var(--panel);
+}
+
+/* ── 游戏场景 ─────────────────────────────── */
 
 .game-scene {
   --scene-padding: 0;
@@ -128,13 +298,13 @@
 .board-stage-shell {
   border-radius: 2rem;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0)),
-    linear-gradient(180deg, rgba(85, 170, 224, 0.14), rgba(9, 47, 84, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.32);
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
+    linear-gradient(180deg, rgba(85,170,224,0.12), rgba(9,47,84,0.06));
+  border: 1px solid rgba(255, 255, 255, 0.28);
   box-shadow:
-    0 28px 72px rgba(22, 71, 119, 0.22),
-    0 8px 20px rgba(22, 71, 119, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.56);
+    0 32px 80px rgba(18, 62, 108, 0.28),
+    0 8px  22px rgba(18, 62, 108, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
 
 .board-stage-shell::before {
@@ -142,9 +312,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 12% 16%, rgba(255, 255, 255, 0.16), transparent 20%),
-    radial-gradient(circle at 88% 12%, rgba(255, 219, 131, 0.18), transparent 18%),
-    radial-gradient(circle at 50% 104%, rgba(255, 255, 255, 0.18), transparent 28%);
+    radial-gradient(circle at 12% 16%, rgba(255,255,255,0.14), transparent 20%),
+    radial-gradient(circle at 88% 12%, rgba(255,219,131,0.16), transparent 18%),
+    radial-gradient(circle at 50% 104%, rgba(255,255,255,0.16), transparent 28%);
   mix-blend-mode: screen;
   pointer-events: none;
 }
@@ -154,28 +324,41 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  background-image: var(--texture-paper, none);
   background-size: 200px 200px;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.34),
-    inset 0 -36px 64px rgba(4, 34, 63, 0.12);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    inset 0 -36px 64px rgba(4, 34, 63, 0.10);
   pointer-events: none;
 }
 
+/* 事件弹层背景 */
 .event-overlay {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
   padding: clamp(1rem, 3vw, 2rem);
-  background: color-mix(in oklab, var(--ink-strong) 34%, transparent);
+  background: oklch(0.18 0.08 232 / 0.62);
+  backdrop-filter: blur(6px) saturate(1.2);
 }
+
+/* ── 胜利场景 ─────────────────────────────── */
 
 .win-scene {
   display: grid;
   align-items: center;
+  overflow: hidden;
+  position: relative;
 }
 
+.win-panel {
+  background: var(--panel);
+  position: relative;
+  z-index: 1;
+}
+
+/* 旧版彩带点（保留兼容） */
 .confetti-strip {
   display: flex;
   flex-wrap: wrap;
@@ -189,53 +372,65 @@
   background: var(--dot-color, var(--coral));
 }
 
+/* 新版彩带粒子系统 */
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.confetti-particle {
+  position: absolute;
+  top: -30px;
+  left: var(--x, 50%);
+  width:  var(--size, 10px);
+  height: var(--size, 10px);
+  background: var(--color, #ff6b6b);
+  border-radius: var(--br, 50%);
+}
+
+.winner-announce {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* ── 响应式 ──────────────────────────────── */
+
 @media (max-width: 980px) {
-  .map-showcase {
-    min-height: 260px;
-  }
+  .hero-scene { min-height: 260px; }
 }
 
 @media (max-width: 820px) {
   .start-scene,
-  .win-scene {
-    align-items: start;
-  }
+  .win-scene { align-items: start; }
 
   .start-panel,
-  .win-panel {
-    order: -1;
-  }
+  .win-panel { order: -1; }
 
   .start-hero,
-  .win-hero {
-    gap: 0.9rem;
-  }
+  .win-hero { gap: 0.85rem; }
 
-  .map-showcase {
-    min-height: 220px;
-  }
+  .hero-scene { min-height: 220px; }
 }
 
 @media (max-width: 640px) {
-  .game-scene {
-    --scene-padding: 0;
-  }
+  .game-scene { --scene-padding: 0; }
 
-  .map-showcase {
+  .hero-scene {
     min-height: 180px;
-    border-radius: 28px;
-    padding: 1rem;
+    border-radius: 1.5rem 2rem 1.8rem 1.4rem;
   }
 
-  .map-showcase__token {
-    padding: 0.48rem 0.72rem;
-    font-size: 0.78rem;
-  }
+  .hero-ship-wrap { width: 58%; }
 
-  .sticker {
-    padding: 0.55rem 0.8rem;
-    font-size: 0.86rem;
-  }
+  .hero-island__palm { font-size: 2rem; }
+  .hero-island__chest { font-size: 1.6rem; }
+
+  .sticker { padding: 0.48rem 0.78rem; font-size: 0.84rem; }
 
   .win-panel .ranking-item {
     flex-wrap: wrap;

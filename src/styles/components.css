@@ -642,22 +642,44 @@
 }
 
 .dice-fab {
-  min-width: 4.9rem;
-  min-height: 4.9rem;
-  padding: 0.82rem 0.95rem;
+  min-width: 5.2rem;
+  min-height: 5.2rem;
+  padding: 0.88rem 1rem;
   display: inline-grid;
   place-items: center;
-  gap: 0.12rem;
-  border-radius: 1.35rem;
+  gap: 0.14rem;
+  /* 手绘感：不规则圆角 */
+  border-radius: 1.2rem 1.5rem 1.4rem 1.1rem;
+  /* 更饱和的 coral 行动色 */
   background:
-    linear-gradient(180deg, #ff9150 0%, #ff6c4b 50%, #ff7f4b 100%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+    linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 50%),
+    linear-gradient(160deg, oklch(0.72 0.23 32), oklch(0.54 0.22 28));
+  border: 2px solid rgba(255, 255, 255, 0.24);
   box-shadow:
-    0 16px 28px rgba(255, 104, 57, 0.26),
-    inset 0 2px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.1);
+    0 20px 36px oklch(0.54 0.22 28 / 0.36),
+    0 6px 12px  oklch(0.54 0.22 28 / 0.20),
+    inset 0 3px 0 rgba(255, 255, 255, 0.30),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.14);
   pointer-events: auto;
   transform-origin: center;
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 140ms ease;
+}
+
+.dice-fab:hover:not([data-motion='rolling']) {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow:
+    0 28px 48px oklch(0.54 0.22 28 / 0.44),
+    0 8px 16px  oklch(0.54 0.22 28 / 0.24),
+    inset 0 3px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.14);
+}
+
+.dice-fab:active:not([data-motion='rolling']) {
+  transform: translateY(2px) scale(0.97);
+  box-shadow:
+    0 8px 18px oklch(0.54 0.22 28 / 0.28),
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.12);
 }
 
 .dice-fab__icon {
@@ -913,23 +935,96 @@
   font-size: 0.96rem;
 }
 
+/* ── 事件弹层卡片 ── */
 .overlay-card {
-  width: min(520px, 100%);
-  max-height: min(34rem, calc(var(--viewport-height, var(--app-height)) - 2rem));
+  position: relative;
+  width: min(540px, 100%);
+  max-height: min(36rem, calc(var(--viewport-height, var(--app-height)) - 2rem));
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: 1rem;
+  gap: 1.2rem;
   overflow: hidden;
-  border-radius: 34px;
-  padding: 1.4rem;
-  background: color-mix(in oklab, white 80%, var(--bg-sand));
-  box-shadow: 0 28px 80px rgba(34, 48, 93, 0.22);
+  border-radius: var(--sketch-radius-lg, 2.2rem 2.6rem 2.4rem 2rem);
+  padding: 1.6rem;
+  /* 纯白面板，与深色遮罩形成最大对比 */
+  background: oklch(0.99 0.010 88);
+  box-shadow:
+    0 40px 100px oklch(0.18 0.10 232 / 0.36),
+    0 12px 32px  oklch(0.18 0.10 232 / 0.18),
+    inset 0 2px 0 rgba(255, 255, 255, 1);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
   text-align: left;
+}
+
+/* 情绪光晕：卡片顶部装饰渐变 */
+.overlay-card__glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--mood-color, oklch(0.62 0.18 228)) 30%,
+    var(--mood-color, oklch(0.62 0.18 228)) 70%,
+    transparent 100%
+  );
+  border-radius: inherit inherit 0 0;
 }
 
 .overlay-card__body {
   min-height: 0;
   overflow: auto;
+}
+
+/* 超大 emoji 展示 */
+.overlay-emoji {
+  width: 5.5rem;
+  height: 5.5rem;
+  font-size: 3rem;
+  border-radius: var(--sketch-radius-md, 1.3rem 1.6rem 1.5rem 1.2rem);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0)),
+    color-mix(in oklab, white 52%, var(--lemon));
+  box-shadow:
+    0 12px 28px oklch(0.62 0.16 80 / 0.22),
+    inset 0 2px 0 rgba(255,255,255,0.8);
+  display: grid;
+  place-items: center;
+}
+
+/* 事件类型标签 */
+.event-caption[data-mood='danger'] {
+  background: oklch(0.92 0.10 22 / 0.8);
+  border-color: oklch(0.60 0.16 22 / 0.4);
+  color: oklch(0.38 0.14 22);
+}
+
+.event-caption[data-mood='lucky'] {
+  background: oklch(0.94 0.12 82 / 0.8);
+  border-color: oklch(0.65 0.16 82 / 0.4);
+  color: oklch(0.38 0.12 82);
+}
+
+/* 情绪化按钮颜色 */
+.overlay-choice[data-mood='danger'] {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 50%),
+    linear-gradient(135deg, oklch(0.64 0.22 22), oklch(0.48 0.20 20));
+  box-shadow:
+    0 14px 28px oklch(0.48 0.20 22 / 0.30),
+    inset 0 2px 0 rgba(255,255,255,0.22);
+}
+
+.overlay-choice[data-mood='lucky'] {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 50%),
+    linear-gradient(135deg, oklch(0.74 0.18 82), oklch(0.60 0.18 78));
+  color: oklch(0.22 0.06 80);
+  box-shadow:
+    0 14px 28px oklch(0.56 0.18 82 / 0.30),
+    inset 0 2px 0 rgba(255,255,255,0.30);
 }
 
 .info-overlay {
@@ -1026,6 +1121,56 @@
   flex: 1 1 180px;
 }
 
+/* ── 胜利屏专属 ── */
+
+/* 奖杯大图标 */
+.winner-trophy {
+  font-size: 4.5rem;
+  line-height: 1;
+  filter:
+    drop-shadow(0 0 16px rgba(255, 210, 60, 0.8))
+    drop-shadow(0 8px 20px rgba(180, 120, 20, 0.4));
+  animation: bounceIn 700ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
+}
+
+/* 冠军皇冠 */
+.winner-crown {
+  font-size: 1.2rem;
+  animation: floatBob 3s ease-in-out infinite;
+}
+
+/* 彩带条装饰行 */
+.win-ribbon-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.win-ribbon {
+  width: 12px;
+  background: var(--rb, var(--coral));
+  border-radius: 6px;
+  animation: popUp 400ms cubic-bezier(0.22, 1, 0.36, 1) var(--delay, 0s) both;
+  /* 高度各不相同，形成波形 */
+}
+
+.win-ribbon:nth-child(1) { height: 32px; }
+.win-ribbon:nth-child(2) { height: 48px; }
+.win-ribbon:nth-child(3) { height: 24px; }
+.win-ribbon:nth-child(4) { height: 56px; }
+.win-ribbon:nth-child(5) { height: 36px; }
+.win-ribbon:nth-child(6) { height: 44px; }
+.win-ribbon:nth-child(7) { height: 20px; }
+
+/* 再玩按钮 */
+.replay-btn {
+  font-size: 1.06rem;
+  padding: 1rem 1.5rem;
+  border-radius: var(--sketch-radius-md, 1.3rem 1.6rem 1.5rem 1.2rem);
+}
+
+/* ── 排行列表 ── */
+
 .ranking-list {
   display: grid;
   gap: 0.85rem;
@@ -1036,13 +1181,27 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.8rem;
-  padding: 0.95rem 1rem;
-  border-radius: 1.4rem;
-  background: color-mix(in oklab, white 72%, var(--bg-sand));
+  padding: 1rem 1.1rem;
+  /* 手绘感：不规则圆角 */
+  border-radius: 1.2rem 1.5rem 1.4rem 1.1rem;
+  background: oklch(0.96 0.02 90);
+  border: 1.5px solid rgba(180, 140, 80, 0.18);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.ranking-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .ranking-item--winner {
-  background: color-mix(in oklab, white 50%, var(--lemon));
+  background:
+    linear-gradient(135deg, oklch(0.96 0.12 82 / 0.6), oklch(0.98 0.08 88)),
+    oklch(0.98 0.08 88);
+  border-color: oklch(0.75 0.16 80 / 0.4);
+  box-shadow:
+    0 8px 24px oklch(0.65 0.16 82 / 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .ranking-item__left {
@@ -1053,8 +1212,8 @@
 }
 
 .ranking-item__badge {
-  width: 2.3rem;
-  height: 2.3rem;
+  min-width: 2.4rem;
+  height: 2.4rem;
   display: grid;
   place-items: center;
   flex: none;
@@ -1062,6 +1221,7 @@
   background: var(--crew-color, var(--coral));
   color: white;
   font-weight: 800;
+  font-size: 1.1rem;
 }
 
 .ranking-item__name {
@@ -1074,6 +1234,8 @@
   white-space: nowrap;
 }
 
+/* ── 棋盘格子：手绘插画风格 ── */
+
 .board-cell-label {
   position: absolute;
   display: grid;
@@ -1081,26 +1243,32 @@
   min-width: 2.5rem;
   height: 1.9rem;
   padding: 0 0.48rem;
-  border-radius: 0.82rem;
+  /* 手绘不规则圆角：每个角稍微不同 */
+  border-radius: 0.72rem 0.88rem 0.80rem 0.68rem;
   transform: translate(-50%, -50%) rotate(var(--cell-rotation, 0deg));
+  /* 羊皮纸质感：更暖的米黄 */
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0)),
-    linear-gradient(180deg, #fff3ce 0%, #f0cf88 100%);
-  border: 1.8px solid rgba(126, 88, 34, 0.52);
-  color: #553410;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 60%),
+    linear-gradient(175deg, #fff8e0 0%, #f5d888 100%);
+  /* 手绘描边：粗细不均，用 box-shadow 模拟 */
+  border: 2px solid rgba(140, 90, 28, 0.58);
+  color: #4a2c08;
   font-size: 0.9rem;
   font-weight: 900;
   line-height: 1;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5), 0 -1px 0 rgba(100, 68, 20, 0.1);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6),
+    0 -1px 0 rgba(100, 60, 10, 0.12);
   transition:
     transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1),
     filter 180ms ease;
+  /* 手绘感：底部阴影+右侧投影，模拟贴纸立体感 */
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.72),
-    inset 0 -2px 0 rgba(206, 144, 61, 0.28),
-    0 6px 14px rgba(96, 71, 33, 0.2),
-    0 2px 4px rgba(96, 71, 33, 0.12);
+    inset 0 2px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -2px 0 rgba(180, 110, 30, 0.28),
+    2px 4px 0 rgba(140, 90, 28, 0.18),
+    0 6px 16px rgba(96, 65, 20, 0.22);
 }
 
 .board-cell-label::after {
@@ -1119,24 +1287,40 @@
 }
 
 .board-cell-label--landmark {
-  min-width: 2.8rem;
-  height: 2.1rem;
-  padding: 0 0.52rem;
-  border-radius: 0.9rem;
-  border-width: 2px;
+  min-width: 2.9rem;
+  height: 2.2rem;
+  padding: 0 0.55rem;
+  /* 更有机的不规则圆角 */
+  border-radius: 0.82rem 1.0rem 0.92rem 0.78rem;
+  border-width: 2.5px;
   cursor: pointer;
-  background: linear-gradient(180deg, #ffe783 0%, #ffbc57 100%);
+  /* 更饱和的金色，手绘感强 */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 45%),
+    linear-gradient(180deg, #ffec70 0%, #ffb02e 100%);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.72),
-    inset 0 -2px 0 rgba(173, 96, 30, 0.26),
-    0 12px 20px rgba(128, 80, 34, 0.24),
-    0 0 0 2.5px rgba(255, 255, 255, 0.32),
-    0 0 10px 2px rgba(255, 188, 87, 0.38);
+    inset 0 2px 0 rgba(255, 255, 255, 0.80),
+    inset 0 -3px 0 rgba(160, 86, 10, 0.28),
+    3px 5px 0 rgba(160, 100, 20, 0.22),
+    0 14px 24px rgba(140, 80, 20, 0.28),
+    0 0 0 3px rgba(255, 255, 255, 0.38),
+    0 0 16px 3px rgba(255, 188, 60, 0.48);
 }
 
 .board-cell-label--landmark:hover {
-  transform: translate(-50%, -56%) rotate(var(--cell-rotation, 0deg)) scale(1.15);
+  transform: translate(-50%, -60%) rotate(var(--cell-rotation, 0deg)) scale(1.18);
   z-index: 10;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.80),
+    inset 0 -3px 0 rgba(160, 86, 10, 0.24),
+    3px 5px 0 rgba(160, 100, 20, 0.18),
+    0 20px 36px rgba(140, 80, 20, 0.32),
+    0 0 0 3px rgba(255, 255, 255, 0.50),
+    0 0 28px 6px rgba(255, 200, 60, 0.55);
+}
+
+.board-cell-label--landmark:active {
+  transform: translate(-50%, -54%) rotate(var(--cell-rotation, 0deg)) scale(1.08);
 }
 
 .board-cell-label__dot {
